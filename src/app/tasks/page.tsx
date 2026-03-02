@@ -98,12 +98,12 @@ export default function TasksPage() {
   const totalDone = tasks.filter(t => t.completed).length
 
   return (
-    <div className="min-h-full p-6 pb-12" style={{ background: '#07070d' }}>
+    <div className="min-h-full p-4 sm:p-6 pb-12" style={{ background: '#07070d' }}>
       <div className="max-w-xl mx-auto space-y-7">
 
         {/* Header */}
         <div className="flex items-center justify-between pt-2">
-          <h1 className="text-2xl font-bold text-white">Задачи</h1>
+          <h1 className="text-2xl font-bold text-white">Задания</h1>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground">
               <span className="font-bold text-white">{totalActive}</span> активных

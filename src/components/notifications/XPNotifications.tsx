@@ -3,24 +3,26 @@
 import { useNotificationStore } from '@/lib/notifications'
 
 export function XPNotifications() {
-  const notifications = useNotificationStore(s => s.notifications)
+  const { notifications } = useNotificationStore()
 
   return (
-    <div className="fixed bottom-6 right-6 flex flex-col gap-2 pointer-events-none z-50">
-      {notifications.map(notif => (
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+      {notifications.map(notification => (
         <div
-          key={notif.id}
+          key={notification.id}
           className="animate-xp-pop"
+          style={{
+            background: `linear-gradient(135deg, ${notification.color}cc, ${notification.color}88)`,
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            boxShadow: `0 0 16px ${notification.color}66`,
+            whiteSpace: 'nowrap',
+          }}
         >
-          <div
-            className="rounded-lg px-4 py-2 text-sm font-bold text-white shadow-lg"
-            style={{
-              background: `linear-gradient(135deg, ${notif.color}, ${notif.color}dd)`,
-              boxShadow: `0 0 20px ${notif.color}66`
-            }}
-          >
-            +{notif.xp} XP
-          </div>
+          +{notification.xp} XP
         </div>
       ))}
     </div>

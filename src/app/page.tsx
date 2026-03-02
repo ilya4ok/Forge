@@ -16,6 +16,7 @@ const TRACK_EMOJI: Record<string, string> = {
 const ALL_TRACKS_ORDERED = ['ai', 'design', 'selfdevelopment', 'mediabuy', 'english', 'polish', 'gym'] as Array<keyof typeof TRACK_COLORS>
 
 const XP_PER_LEVEL = 200
+const RANK_NAMES = ['Странник', 'Ученик', 'Воин', 'Рыцарь', 'Страж', 'Чемпион', 'Паладин', 'Легенда', 'Архонт']
 
 export default function Dashboard() {
   const { tasks, streak, trackXP, onboardingDone, processOnOpen, completeTask, skipTask } = useStore()
@@ -29,6 +30,8 @@ export default function Dashboard() {
   const level = Math.floor(totalXP / XP_PER_LEVEL) + 1
   const xpInLevel = totalXP % XP_PER_LEVEL
   const levelProgress = (xpInLevel / XP_PER_LEVEL) * 100
+  const rankIndex = Math.min(Math.floor((level - 1) / 3), RANK_NAMES.length - 1)
+  const rankName = RANK_NAMES[rankIndex]
 
   const trackEntries = ALL_TRACKS_ORDERED
     .map(t => [t, trackXP[t] || 0] as [keyof typeof TRACK_COLORS, number])
@@ -70,7 +73,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 space-y-4 max-w-3xl">
+    <div className="p-4 sm:p-6 space-y-4 max-w-3xl">
 
       {/* Header */}
       <div className="space-y-0.5 mb-2">
@@ -82,8 +85,8 @@ export default function Dashboard() {
         </h1>
       </div>
 
-      {/* Stats — 3 cards */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Stats — 3 cards (responsive) */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 md:gap-3">
 
         <div
           className="glow-orange relative overflow-hidden rounded-2xl p-5"
@@ -145,7 +148,10 @@ export default function Dashboard() {
             >
               {level}
             </div>
-            <span className="text-sm font-semibold text-foreground">Уровень {level}</span>
+            <div>
+              <span className="text-sm font-semibold text-foreground">{rankName}</span>
+              <span className="ml-1.5 text-xs text-muted-foreground">· ур. {level}</span>
+            </div>
           </div>
           <span className="text-xs text-muted-foreground tabular-nums">{xpInLevel} / {XP_PER_LEVEL} XP</span>
         </div>
@@ -164,8 +170,8 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Main 2-column grid */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Main grid */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
 
         {/* Today tasks */}
         <div
@@ -321,7 +327,7 @@ export default function Dashboard() {
           <MessageSquare size={15} className="text-white" />
         </div>
         <div className="min-w-0">
-          <p className="font-semibold text-foreground">Написать AI-ассистенту</p>
+          <p className="font-semibold text-foreground">Обратиться к Оракулу</p>
           <p className="text-xs text-muted-foreground">Задачи, расписание, мотивация — всё через чат</p>
         </div>
         <ChevronRight size={16} className="ml-auto shrink-0 text-muted-foreground" />

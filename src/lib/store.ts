@@ -22,6 +22,17 @@ function checkAchievements(state: AppState, newAchievements: string[]): string[]
   const totalXP = Object.values(state.trackXP).reduce((a, b) => a + b, 0)
   if (totalXP >= 500 && !achievements.includes('total-500')) achievements.push('total-500')
   if (totalXP >= 5000 && !achievements.includes('total-5000')) achievements.push('total-5000')
+  if (totalXP >= 10000 && !achievements.includes('total-10000')) achievements.push('total-10000')
+
+  // Task completion milestones
+  const completedCount = state.tasks.filter(t => t.completed).length
+  if (completedCount >= 1 && !achievements.includes('first-task')) achievements.push('first-task')
+  if (completedCount >= 100 && !achievements.includes('tasks-100')) achievements.push('tasks-100')
+  if (completedCount >= 500 && !achievements.includes('tasks-500')) achievements.push('tasks-500')
+
+  // All tracks milestone
+  const tracksWithXP = Object.values(state.trackXP).filter(xp => xp > 0).length
+  if (tracksWithXP === 7 && !achievements.includes('all-tracks')) achievements.push('all-tracks')
 
   return achievements
 }

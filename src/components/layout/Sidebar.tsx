@@ -3,24 +3,29 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, MessageSquare, Calendar,
-  CheckSquare, BarChart2, Flame, Zap,
+  Crown, MessageSquare, Scroll,
+  Swords, BookOpen, Flame, Zap,
 } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
 const NAV = [
-  { href: '/',          icon: LayoutDashboard, label: 'Главная' },
-  { href: '/chat',      icon: MessageSquare,   label: 'AI Чат' },
-  { href: '/schedule',  icon: Calendar,         label: 'Расписание' },
-  { href: '/tasks',     icon: CheckSquare,      label: 'Задачи' },
-  { href: '/stats',     icon: BarChart2,        label: 'Статистика' },
+  { href: '/',          icon: Crown,          label: 'Цитадель' },
+  { href: '/chat',      icon: MessageSquare,  label: 'Оракул' },
+  { href: '/schedule',  icon: Scroll,         label: 'Хроники' },
+  { href: '/tasks',     icon: Swords,         label: 'Задания' },
+  { href: '/stats',     icon: BookOpen,       label: 'Свитки' },
 ]
+
+const RANK_NAMES = ['Странник', 'Ученик', 'Воин', 'Рыцарь', 'Страж', 'Чемпион', 'Паладин', 'Легенда', 'Архонт']
 
 export function Sidebar() {
   const pathname = usePathname()
   const { streak, trackXP } = useStore()
   const totalXP = Object.values(trackXP).reduce((a, b) => a + b, 0)
+  const level = Math.floor(totalXP / 200) + 1
+  const rankIndex = Math.min(Math.floor((level - 1) / 3), RANK_NAMES.length - 1)
+  const rankName = RANK_NAMES[rankIndex]
 
   return (
     <aside className="flex w-16 flex-col items-center border-r border-border bg-sidebar py-5 lg:w-60 lg:items-start lg:px-4">
@@ -36,7 +41,7 @@ export function Sidebar() {
           И
         </div>
         <span className="ml-3 hidden text-sm font-semibold text-foreground lg:block">
-          Личный дашборд
+          Цитадель Ильи
         </span>
       </div>
 
@@ -99,11 +104,11 @@ export function Sidebar() {
           }}
         >
           <Zap size={18} className="shrink-0 text-primary" />
-          <div className="hidden lg:block">
-            <p className="text-xs text-primary/60">Опыт</p>
-            <p className="text-sm font-bold text-primary">{totalXP} XP</p>
+          <div className="hidden lg:block min-w-0">
+            <p className="text-xs text-primary/60 truncate">{rankName}</p>
+            <p className="text-sm font-bold text-primary">Ур. {level} · {totalXP} XP</p>
           </div>
-          <span className="text-sm font-bold text-primary lg:hidden">{totalXP}</span>
+          <span className="text-xs font-bold text-primary lg:hidden">{level}</span>
         </div>
       </div>
     </aside>

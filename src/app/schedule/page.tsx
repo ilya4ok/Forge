@@ -162,12 +162,12 @@ export default function SchedulePage() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
 
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Расписание</h1>
+          <h1 className="text-2xl font-bold text-white">Хроники</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(weekStart, 'd MMM', { locale: ru })} — {format(addDays(weekStart, 6), 'd MMM yyyy', { locale: ru })}
           </p>

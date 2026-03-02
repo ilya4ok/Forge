@@ -4,6 +4,10 @@ import Anthropic from '@anthropic-ai/sdk'
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({ error: 'ANTHROPIC_API_KEY не найден в .env.local — перезапусти сервер после добавления ключа' }, { status: 500 })
+  }
+
   try {
     const { messages, context } = await req.json()
 
@@ -87,12 +91,7 @@ ${context.upcomingTasks.slice(0, 7).map((t: { id: string; title: string; date: s
 - Не проси вносить через интерфейс — ты сам всё делаешь
 - XP: ai=30, design=25, selfdevelopment=20, mediabuy=25, english=20, polish=30(1ч)/15(30мин), gym=15
 
-AI INSIGHTS — дополни ответ умными советами:
-- Если пропущена задача 2+ дня подряд: "Заметил, что ты не делал [Track] уже ${days} дней. Может быть, начать сегодня?"
-- Если стрик на ${streak.current} дней близко к рекорду (75%+): "Ты почти на рекорде! Ещё ${shortage} дней и будет ${streak.longest}!"
-- Если день имеет много незавершённого: "Сегодня ${unfinished} задач. Начни с ${quickest} — быстро сделаешься."
-- Если трек в 0 XP: "Ещё не начал ${track}? Это отличное время!"
-- Мотивация на основе прогресса: "За последнюю неделю ты заработал ${weekXP} XP. Продолжай так!"
+Если видишь незакрытые задачи или пропущенные треки — сам добавь мотивацию в ответ.`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -101,7 +100,12 @@ AI INSIGHTS — дополни ответ умными советами:
       messages,
     })
 
-    const raw = response.content[0].type === 'text' ? response.content[0].text : ''
+    const block = response.content?.[0]
+    if (!block) {
+      console.error('Empty API response:', response.stop_reason, response.usage)
+      return NextResponse.json({ error: `AI не вернул ответ (stop_reason: ${response.stop_reason})` }, { status: 500 })
+    }
+    const raw = block.type === 'text' ? block.text : ''
     const msgMatch = raw.match(/<RESPONSE>([\s\S]*?)<\/RESPONSE>/)
     const actMatch = raw.match(/<ACTIONS>([\s\S]*?)<\/ACTIONS>/)
     const message = msgMatch ? msgMatch[1].trim() : raw.trim()
@@ -113,6 +117,7 @@ AI INSIGHTS — дополни ответ умными советами:
     return NextResponse.json({ message, actions })
   } catch (error) {
     console.error('Chat API error:', error)
-    return NextResponse.json({ error: 'Ошибка сервера' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
