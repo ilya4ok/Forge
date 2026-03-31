@@ -33,7 +33,7 @@ function AchievementIcon({ ach, done, cfg }: { ach: { id: string; emoji: string;
           {ach.label}
         </span>
       </div>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-10 hidden group-hover:block pointer-events-none">
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 hidden group-hover:block pointer-events-none">
         <div className="rounded-lg px-2.5 py-1.5 text-xs whitespace-nowrap" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
           {ach.desc}{done && <span className="ml-1.5" style={{ color: cfg.color }}>✓</span>}
         </div>
