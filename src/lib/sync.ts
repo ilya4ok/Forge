@@ -80,7 +80,7 @@ export async function saveUserData(userId: string) {
     .from('user_data')
     .upsert({ id: userId, data }, { onConflict: 'id' })
 
-  if (error) console.error('Save error:', error)
+  if (error) console.error('Save error:', error.code, error.message, error.details, error.hint)
 }
 
 // Create a weekly backup snapshot, keep last 8
