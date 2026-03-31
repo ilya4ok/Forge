@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { XPNotifications } from '@/components/notifications/XPNotifications'
+import { Sidebar } from '@/components/layout/Sidebar'
 import { useStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
 import { loadUserData, saveUserData } from '@/lib/sync'
@@ -12,6 +13,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   const userIdRef = useRef<string | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const setUserName = useStore(s => s.setUserName)
+  const [ready, setReady] = useState(false)
 
   // Debounced save — waits 2s after last store change before saving
   const scheduleSave = useCallback(() => {
@@ -35,6 +37,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       // Load cloud data first — only allow saves after load completes
       await loadUserData(userId)
       userIdRef.current = userId
+      setReady(true)
     })
 
     // Listen for auth changes (logout, session expiry)
@@ -57,10 +60,17 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
     return () => unsub()
   }, [scheduleSave])
 
+  if (!ready) return null
+
   return (
-    <div className="flex-1 flex flex-col">
-      {children}
-      <XPNotifications />
+    <div className="flex h-screen overflow-hidden bg-background">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 flex flex-col">
+          {children}
+          <XPNotifications />
+        </div>
+      </main>
     </div>
   )
 }
