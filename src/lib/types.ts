@@ -15,6 +15,7 @@ export type TemplateTask = {
   categoryId: string
   durationMins: number
   xp: number
+  emoji?: string
   weeklyFrequency?: number   // 1–7 days per week
   defaultTimeStart?: string  // "HH:MM"
 }

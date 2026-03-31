@@ -129,7 +129,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
                   return (
                     <button
                       key={tmpl.id}
-                      onClick={() => pickFromPool(tmpl)}
+                      onClick={() => pickFromPool({ ...tmpl, emoji: tmpl.emoji ?? tmplCat?.emoji ?? '📋' })}
                       className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all hover:brightness-125"
                       style={{ background: `${tmplColor}10`, border: `1px solid ${tmplColor}30` }}
                     >
