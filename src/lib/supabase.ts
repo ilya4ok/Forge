@@ -1,28 +1,14 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-let _client: SupabaseClient | null = null
-
-function getClient(): SupabaseClient {
-  if (!_client) {
-    _client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: true,
-          storageKey: 'forge-auth',
-          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      }
-    )
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: true,
+      storageKey: 'forge-auth',
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
   }
-  return _client
-}
-
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getClient() as unknown as Record<string | symbol, unknown>)[prop]
-  },
-})
+)
