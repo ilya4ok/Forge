@@ -60,6 +60,32 @@ function AddToDateButton({ onAdd, color }: { onAdd: (date: string) => void; colo
   const tomorrow = format(new Date(Date.now() + 86400000), 'yyyy-MM-dd')
   function add(date: string) { onAdd(date); setOpen(false) }
 
+  const panel = (
+    <div
+      className="w-56 rounded-2xl p-2 shadow-2xl"
+      style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}
+    >
+      <button onClick={() => add(today)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">Сегодня</button>
+      <button onClick={() => add(tomorrow)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">Завтра</button>
+      <div className="mt-1 border-t border-white/5 pt-2 px-2 pb-1 space-y-1.5">
+        <p className="text-xs text-muted-foreground px-1">Другая дата</p>
+        <input
+          type="date" value={customDate}
+          onChange={e => setCustomDate(e.target.value)}
+          className="w-full rounded-lg px-2 py-1.5 text-xs text-foreground outline-none"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', colorScheme: 'dark' }}
+        />
+        <button
+          onClick={() => add(customDate)}
+          className="w-full rounded-xl py-2 text-sm font-semibold text-white"
+          style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
+        >
+          Добавить
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="relative">
       <button
@@ -71,28 +97,19 @@ function AddToDateButton({ onAdd, color }: { onAdd: (date: string) => void; colo
         В расписание
         <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
+
+      {/* Desktop: absolute dropdown */}
       {open && (
-        <div
-          className="absolute right-0 top-11 z-30 w-48 rounded-2xl p-2 shadow-2xl"
-          style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          <button onClick={() => add(today)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">Сегодня</button>
-          <button onClick={() => add(tomorrow)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">Завтра</button>
-          <div className="mt-1 border-t border-white/5 pt-2 px-2 pb-1 space-y-1.5">
-            <p className="text-xs text-muted-foreground px-1">Другая дата</p>
-            <input
-              type="date" value={customDate}
-              onChange={e => setCustomDate(e.target.value)}
-              className="w-full rounded-lg px-2 py-1.5 text-xs text-foreground outline-none"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-            />
-            <button
-              onClick={() => add(customDate)}
-              className="w-full rounded-xl py-2 text-sm font-semibold text-white"
-              style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
-            >
-              Добавить
-            </button>
+        <div className="hidden sm:block absolute right-0 top-11 z-30">
+          {panel}
+        </div>
+      )}
+
+      {/* Mobile: fixed centered overlay */}
+      {open && (
+        <div className="sm:hidden fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={() => setOpen(false)}>
+          <div onClick={e => e.stopPropagation()}>
+            {panel}
           </div>
         </div>
       )}
