@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { Flame, Zap, CheckCircle2, Circle, ChevronRight, SkipForward, CalendarDays, Layers, MessageSquare } from 'lucide-react'
+import { Flame, Zap, CheckCircle2, Circle, ChevronRight, CalendarDays, Layers, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
 import { catColor, catLabel, catEmoji } from '@/lib/types'
@@ -97,7 +97,7 @@ const XP_PER_LEVEL = 200
 const RANK_NAMES = ['Новичок', 'Стажёр', 'Специалист', 'Профи', 'Эксперт', 'Мастер', 'Гуру', 'Легенда', 'Элита']
 
 export default function Dashboard() {
-  const { tasks, dayJobs, streak, trackXP, onboardingDone, processOnOpen, completeTask, skipTask, userName, categories, achievements } = useStore()
+  const { tasks, dayJobs, streak, trackXP, onboardingDone, processOnOpen, completeTask, userName, categories, achievements } = useStore()
 
   useEffect(() => { processOnOpen() }, [processOnOpen])
 
@@ -378,15 +378,6 @@ export default function Dashboard() {
 
                   {task.completed && (
                     <span className="text-sm font-bold text-yellow-400 shrink-0">+{task.xp}</span>
-                  )}
-                  {!task.completed && !task.skipped && (
-                    <button
-                      onClick={() => skipTask(task.id)}
-                      className="hidden shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground group-hover:flex"
-                      title="Пропустить"
-                    >
-                      <SkipForward size={13} />
-                    </button>
                   )}
                 </div>
               ))}
