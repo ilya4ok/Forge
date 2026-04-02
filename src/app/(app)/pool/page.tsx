@@ -179,8 +179,8 @@ function TaskCardForm({
               className="flex items-center gap-2 rounded-xl px-3 py-3 text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: `${p.color}12`, border: `1px solid ${p.color}35` }}
             >
-              <span className="text-xl shrink-0">{p.emoji}</span>
-              <span className="text-sm font-medium text-foreground">{p.label}</span>
+              <span className="text-lg shrink-0">{p.emoji}</span>
+              <span className="text-xs font-medium text-foreground">{p.label}</span>
             </button>
           ))}
         </div>
