@@ -449,6 +449,16 @@ export default function SchedulePage() {
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i + weekOffset))
 
+  // Mobile: 3 days centered on selectedDate
+  const selectedDayObj = new Date(selectedDate + 'T12:00:00')
+  const today = new Date(); today.setHours(0,0,0,0)
+  const mobileDays = [-1, 0, 1].map(offset => addDays(selectedDayObj, offset))
+  function mobileNavDay(dir: -1 | 1) {
+    const next = addDays(selectedDayObj, dir)
+    if (next < today) return
+    setSelectedDate(format(next, 'yyyy-MM-dd'))
+  }
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
 
@@ -483,53 +493,99 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Week strip */}
+      {/* Week strip — mobile: 3 days, desktop: 7 days */}
       <div className="flex items-center gap-2">
+        {/* Left arrow */}
         <button
-          onClick={() => setWeekOffset(o => Math.max(0, o - 7))}
-          disabled={weekOffset === 0}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-20"
+          onClick={() => mobileNavDay(-1)}
+          className="sm:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-20"
+          disabled={selectedDate === format(new Date(), 'yyyy-MM-dd')}
           style={{ background: '#12121e', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset', color: 'rgba(255,255,255,0.4)' }}
         >
           <ArrowLeft size={14} />
         </button>
-        <div className="grid grid-cols-7 gap-1.5 flex-1">
-        {weekDays.map(day => {
-          const dateStr = format(day, 'yyyy-MM-dd')
-          const dayTasks = tasks.filter(t => t.date === dateStr)
-          const isTodayDay = isToday(day)
-          const isSelected = dateStr === selectedDate
+        <button
+          onClick={() => setWeekOffset(o => Math.max(0, o - 7))}
+          disabled={weekOffset === 0}
+          className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-20"
+          style={{ background: '#12121e', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset', color: 'rgba(255,255,255,0.4)' }}
+        >
+          <ArrowLeft size={14} />
+        </button>
 
-          return (
-            <button
-              key={dateStr}
-              onClick={() => setSelectedDate(dateStr)}
-              className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all"
-              style={{
-                background: isSelected
-                  ? 'linear-gradient(160deg, #16163a, #0f0f25)'
-                  : '#0f0f1a',
-                boxShadow: isSelected
-                  ? '0 0 0 1px rgba(129,140,248,0.4) inset'
-                  : '0 0 0 1px rgba(255,255,255,0.05) inset',
-              }}
-            >
-              <p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isSelected ? 'text-primary' : isTodayDay ? 'text-primary/50' : 'text-white/25'}`}>
-                {format(day, 'EEE', { locale: ru })}
-              </p>
-              <p className={`text-lg font-black leading-tight ${isSelected ? 'text-white' : 'text-white/50'}`}>
-                {format(day, 'd')}
-              </p>
-              {dayTasks.length > 0 && (
-                <div className="h-1 w-1 rounded-full mt-0.5" style={{ background: isSelected ? '#818cf8' : 'rgba(255,255,255,0.2)' }} />
-              )}
-            </button>
-          )
-        })}
+        {/* Mobile: 3 days */}
+        <div className="sm:hidden grid grid-cols-3 gap-1.5 flex-1">
+          {mobileDays.map(day => {
+            const dateStr = format(day, 'yyyy-MM-dd')
+            const dayTasks = tasks.filter(t => t.date === dateStr)
+            const isTodayDay = isToday(day)
+            const isSelected = dateStr === selectedDate
+            return (
+              <button
+                key={dateStr}
+                onClick={() => setSelectedDate(dateStr)}
+                className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all"
+                style={{
+                  background: isSelected ? 'linear-gradient(160deg, #16163a, #0f0f25)' : '#0f0f1a',
+                  boxShadow: isSelected ? '0 0 0 1px rgba(129,140,248,0.4) inset' : '0 0 0 1px rgba(255,255,255,0.05) inset',
+                }}
+              >
+                <p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isSelected ? 'text-primary' : isTodayDay ? 'text-primary/50' : 'text-white/25'}`}>
+                  {format(day, 'EEE', { locale: ru })}
+                </p>
+                <p className={`text-lg font-black leading-tight ${isSelected ? 'text-white' : 'text-white/50'}`}>
+                  {format(day, 'd')}
+                </p>
+                {dayTasks.length > 0 && (
+                  <div className="h-1 w-1 rounded-full mt-0.5" style={{ background: isSelected ? '#818cf8' : 'rgba(255,255,255,0.2)' }} />
+                )}
+              </button>
+            )
+          })}
         </div>
+
+        {/* Desktop: 7 days */}
+        <div className="hidden sm:grid grid-cols-7 gap-1.5 flex-1">
+          {weekDays.map(day => {
+            const dateStr = format(day, 'yyyy-MM-dd')
+            const dayTasks = tasks.filter(t => t.date === dateStr)
+            const isTodayDay = isToday(day)
+            const isSelected = dateStr === selectedDate
+            return (
+              <button
+                key={dateStr}
+                onClick={() => setSelectedDate(dateStr)}
+                className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all"
+                style={{
+                  background: isSelected ? 'linear-gradient(160deg, #16163a, #0f0f25)' : '#0f0f1a',
+                  boxShadow: isSelected ? '0 0 0 1px rgba(129,140,248,0.4) inset' : '0 0 0 1px rgba(255,255,255,0.05) inset',
+                }}
+              >
+                <p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isSelected ? 'text-primary' : isTodayDay ? 'text-primary/50' : 'text-white/25'}`}>
+                  {format(day, 'EEE', { locale: ru })}
+                </p>
+                <p className={`text-lg font-black leading-tight ${isSelected ? 'text-white' : 'text-white/50'}`}>
+                  {format(day, 'd')}
+                </p>
+                {dayTasks.length > 0 && (
+                  <div className="h-1 w-1 rounded-full mt-0.5" style={{ background: isSelected ? '#818cf8' : 'rgba(255,255,255,0.2)' }} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Right arrow */}
+        <button
+          onClick={() => mobileNavDay(1)}
+          className="sm:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
+          style={{ background: '#12121e', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset', color: 'rgba(255,255,255,0.4)' }}
+        >
+          <ArrowRight size={14} />
+        </button>
         <button
           onClick={() => setWeekOffset(o => o + 7)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
+          className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
           style={{ background: '#12121e', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset', color: 'rgba(255,255,255,0.4)' }}
         >
           <ArrowRight size={14} />
