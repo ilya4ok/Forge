@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { format, addDays } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import Link from 'next/link'
-import { Trash2, Brain, CheckCircle2, Loader2, MessageSquare, Download } from 'lucide-react'
+import { Trash2, Brain, CheckCircle2, Loader2, MessageSquare, Download, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useStore } from '@/lib/store'
 
 export default function JournalPage() {
@@ -176,44 +176,66 @@ export default function JournalPage() {
         </div>
       )}
 
-      {/* Mobile: horizontal date strip */}
-      <div
-        className="flex sm:hidden gap-1.5 overflow-x-auto pb-1 -mx-4 px-4"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        {days.map(date => {
-          const hasEntry = journalEntries.some(e => e.date === date)
-          const isToday = date === today
-          const isSelected = date === selectedDate
-          return (
+      {/* Mobile: 3-day strip with arrows */}
+      {(() => {
+        const selObj = new Date(selectedDate + 'T12:00:00')
+        const mobileDays = [-1, 0, 1].map(o => format(addDays(selObj, o), 'yyyy-MM-dd'))
+        function navDay(dir: -1 | 1) {
+          const next = format(addDays(selObj, dir), 'yyyy-MM-dd')
+          setSelectedDate(next)
+        }
+        return (
+          <div className="flex sm:hidden items-center gap-2">
             <button
-              key={date}
-              onClick={() => setSelectedDate(date)}
-              className="shrink-0 rounded-xl px-3 py-2 text-center transition-all"
-              style={{
-                background: isSelected
-                  ? 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(167,139,250,0.1))'
-                  : 'rgba(255,255,255,0.04)',
-                boxShadow: isSelected ? '0 0 0 1px rgba(129,140,248,0.25) inset' : '0 0 0 1px rgba(255,255,255,0.06) inset',
-              }}
+              onClick={() => navDay(-1)}
+              disabled={selectedDate === today}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-20"
+              style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset', color: 'rgba(255,255,255,0.4)' }}
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider"
-                style={{ color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.3)' }}
-              >
-                {isToday ? 'Сег' : format(new Date(date + 'T12:00:00'), 'EEE', { locale: ru })}
-              </p>
-              <p className="text-sm font-semibold mt-0.5"
-                style={{ color: isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)' }}
-              >
-                {format(new Date(date + 'T12:00:00'), 'd', { locale: ru })}
-              </p>
-              {hasEntry && (
-                <div className="mt-1 h-1 w-3 rounded-full mx-auto" style={{ background: '#818cf880' }} />
-              )}
+              <ArrowLeft size={14} />
             </button>
-          )
-        })}
-      </div>
+            <div className="grid grid-cols-3 gap-1.5 flex-1">
+              {mobileDays.map(date => {
+                const hasEntry = journalEntries.some(e => e.date === date)
+                const isToday = date === today
+                const isSelected = date === selectedDate
+                return (
+                  <button
+                    key={date}
+                    onClick={() => setSelectedDate(date)}
+                    className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all"
+                    style={{
+                      background: isSelected ? 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(167,139,250,0.1))' : 'rgba(255,255,255,0.04)',
+                      boxShadow: isSelected ? '0 0 0 1px rgba(129,140,248,0.25) inset' : '0 0 0 1px rgba(255,255,255,0.06) inset',
+                    }}
+                  >
+                    <p className="text-[9px] font-bold uppercase tracking-wider leading-none"
+                      style={{ color: isSelected ? '#818cf8' : isToday ? 'rgba(129,140,248,0.4)' : 'rgba(255,255,255,0.25)' }}
+                    >
+                      {isToday ? 'Сег' : format(new Date(date + 'T12:00:00'), 'EEE', { locale: ru })}
+                    </p>
+                    <p className="text-lg font-black leading-tight"
+                      style={{ color: isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)' }}
+                    >
+                      {format(new Date(date + 'T12:00:00'), 'd', { locale: ru })}
+                    </p>
+                    {hasEntry && (
+                      <div className="h-1 w-1 rounded-full mt-0.5" style={{ background: isSelected ? '#818cf8' : 'rgba(255,255,255,0.2)' }} />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              onClick={() => navDay(1)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
+              style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset', color: 'rgba(255,255,255,0.4)' }}
+            >
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        )
+      })()}
 
       <div className="flex gap-4 flex-1 min-h-0">
 
