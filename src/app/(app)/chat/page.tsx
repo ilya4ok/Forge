@@ -285,10 +285,9 @@ export default function ChatPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Напиши сообщение... (Enter — отправить)"
+            placeholder="Напиши сообщение..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
-            style={{ maxHeight: '120px' }}
+            className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors overflow-hidden"
           />
           <button
             onClick={send}
