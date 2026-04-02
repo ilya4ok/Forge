@@ -182,6 +182,7 @@ export default function JournalPage() {
         const mobileDays = [-1, 0, 1].map(o => format(addDays(selObj, o), 'yyyy-MM-dd'))
         function navDay(dir: -1 | 1) {
           const next = format(addDays(selObj, dir), 'yyyy-MM-dd')
+          if (dir === -1 && next < today) return
           setSelectedDate(next)
         }
         return (

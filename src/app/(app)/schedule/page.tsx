@@ -455,7 +455,7 @@ export default function SchedulePage() {
   const mobileDays = [-1, 0, 1].map(offset => addDays(selectedDayObj, offset))
   function mobileNavDay(dir: -1 | 1) {
     const next = addDays(selectedDayObj, dir)
-    if (next < today) return
+    if (dir === -1 && next < today) return
     setSelectedDate(format(next, 'yyyy-MM-dd'))
   }
 
