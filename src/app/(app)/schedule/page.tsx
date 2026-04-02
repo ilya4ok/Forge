@@ -488,7 +488,7 @@ export default function SchedulePage() {
             style={{ background: '#12121e', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}
           >
             <Layers size={13} />
-            Активности
+            <span className="hidden sm:inline">Активности</span>
           </Link>
         </div>
       </div>
