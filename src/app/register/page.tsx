@@ -129,6 +129,13 @@ export default function RegisterPage() {
               {loading ? <Loader2 size={15} className="animate-spin" /> : null}
               {loading ? 'Регистрирую...' : 'Зарегистрироваться'}
             </button>
+
+            <p className="text-xs text-white/25 text-center">
+              Регистрируясь, ты соглашаешься с{' '}
+              <Link href="/privacy" className="text-white/40 hover:text-white/60 underline underline-offset-2 transition-colors">
+                политикой конфиденциальности
+              </Link>
+            </p>
           </form>
         </div>
 
