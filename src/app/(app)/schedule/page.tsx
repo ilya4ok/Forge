@@ -520,14 +520,17 @@ export default function SchedulePage() {
             const dayTasks = tasks.filter(t => t.date === dateStr)
             const isTodayDay = isToday(day)
             const isSelected = dateStr === selectedDate
+            const isPast = dateStr < format(new Date(), 'yyyy-MM-dd')
             return (
               <button
                 key={dateStr}
-                onClick={() => setSelectedDate(dateStr)}
-                className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all"
+                onClick={() => !isPast && setSelectedDate(dateStr)}
+                disabled={isPast}
+                className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all disabled:cursor-not-allowed"
                 style={{
                   background: isSelected ? 'linear-gradient(160deg, #16163a, #0f0f25)' : '#0f0f1a',
                   boxShadow: isSelected ? '0 0 0 1px rgba(129,140,248,0.4) inset' : '0 0 0 1px rgba(255,255,255,0.05) inset',
+                  opacity: isPast ? 0.3 : 1,
                 }}
               >
                 <p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isSelected ? 'text-primary' : isTodayDay ? 'text-primary/50' : 'text-white/25'}`}>

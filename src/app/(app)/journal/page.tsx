@@ -200,14 +200,17 @@ export default function JournalPage() {
                 const hasEntry = journalEntries.some(e => e.date === date)
                 const isToday = date === today
                 const isSelected = date === selectedDate
+                const isPast = date < today
                 return (
                   <button
                     key={date}
-                    onClick={() => setSelectedDate(date)}
-                    className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all"
+                    onClick={() => !isPast && setSelectedDate(date)}
+                    disabled={isPast}
+                    className="flex flex-col items-center justify-center gap-0.5 rounded-xl py-3 w-full transition-all disabled:cursor-not-allowed"
                     style={{
                       background: isSelected ? 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(167,139,250,0.1))' : 'rgba(255,255,255,0.04)',
                       boxShadow: isSelected ? '0 0 0 1px rgba(129,140,248,0.25) inset' : '0 0 0 1px rgba(255,255,255,0.06) inset',
+                      opacity: isPast ? 0.3 : 1,
                     }}
                   >
                     <p className="text-[9px] font-bold uppercase tracking-wider leading-none"
