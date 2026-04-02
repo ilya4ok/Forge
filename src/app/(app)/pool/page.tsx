@@ -458,12 +458,13 @@ export default function PoolPage() {
         </div>
         <button
           onClick={() => setCreating(true)}
-          className="flex items-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 shrink-0"
+          className="flex items-center justify-center rounded-xl transition-opacity hover:opacity-90 shrink-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm sm:font-semibold h-10 w-10 sm:h-auto sm:w-auto text-white"
           style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
+          title="Новая карточка"
         >
-          <Plus size={16} />
-          <span className="hidden sm:inline">Новая карточка</span>
-          <span className="sm:hidden">Новая</span>
+          <Plus size={20} className="sm:hidden" />
+          <Plus size={16} className="hidden sm:block" />
+          <span className="hidden sm:inline font-semibold">Новая карточка</span>
         </button>
       </div>
 
