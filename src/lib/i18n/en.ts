@@ -1,5 +1,5 @@
 export const en = {
-  lang: 'en' as const,
+  lang: 'en' as string,
 
   nav: {
     home: 'Home',
