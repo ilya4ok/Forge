@@ -216,9 +216,6 @@ export default function Dashboard() {
         <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
           {format(new Date(), 'EEEE, d MMMM yyyy', { locale: ru })}
         </p>
-        <h1 className="text-3xl font-bold text-foreground">
-          {greeting}, {userName} <span className="gradient-text">✦</span>
-        </h1>
       </div>
 
       {/* Stats — 3 cards (responsive) */}
