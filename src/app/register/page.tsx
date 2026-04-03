@@ -7,11 +7,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Loader2, Mail, Lock, User } from 'lucide-react'
-import { useT } from '@/lib/i18n'
+import { useT, type Lang } from '@/lib/i18n'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { t } = useT()
+  const { t, lang, setLang } = useT()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -64,6 +64,21 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#060510' }}>
       <div className="w-full max-w-sm">
+        <div className="flex items-center gap-1 mb-6">
+          {(['en', 'uk'] as Lang[]).map(l => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className="rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition-all"
+              style={lang === l
+                ? { background: 'rgba(129,140,248,0.15)', color: '#818cf8', boxShadow: '0 0 0 1px rgba(129,140,248,0.3) inset' }
+                : { color: 'rgba(255,255,255,0.25)' }
+              }
+            >
+              {l}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-col items-center gap-3 mb-8">
           <img src="/forge-logo.svg" alt="Forge" className="h-14 w-14" />
           <div className="text-center">

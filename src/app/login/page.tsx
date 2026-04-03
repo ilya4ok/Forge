@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
-import { useT } from '@/lib/i18n'
+import { useT, type Lang } from '@/lib/i18n'
 
 function translateError(msg: string, errors: Record<string, string>): string {
   if (msg.includes('Invalid login credentials')) return errors.invalidCredentials
@@ -24,7 +24,7 @@ const REMEMBER_KEY = 'forge-remember-email'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { t } = useT()
+  const { t, lang, setLang } = useT()
   const [email, setEmail] = useState(() =>
     typeof window !== 'undefined' ? (localStorage.getItem(REMEMBER_KEY) ?? '') : ''
   )
@@ -72,6 +72,24 @@ export default function LoginPage() {
     }
   }
 
+  const langSwitcher = (
+    <div className="flex items-center gap-1 mb-6">
+      {(['en', 'uk'] as Lang[]).map(l => (
+        <button
+          key={l}
+          onClick={() => setLang(l)}
+          className="rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition-all"
+          style={lang === l
+            ? { background: 'rgba(129,140,248,0.15)', color: '#818cf8', boxShadow: '0 0 0 1px rgba(129,140,248,0.3) inset' }
+            : { color: 'rgba(255,255,255,0.25)' }
+          }
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  )
+
   const logo = (
     <div className="flex flex-col items-center gap-3 mb-8">
       <img src="/forge-logo.svg" alt="Forge" className="h-14 w-14" />
@@ -86,6 +104,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#060510' }}>
         <div className="w-full max-w-sm">
+          {langSwitcher}
           {logo}
           <div className="rounded-2xl p-6 text-center space-y-4" style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="text-4xl">📬</div>
@@ -117,6 +136,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#060510' }}>
       <div className="w-full max-w-sm">
+        {langSwitcher}
         {logo}
 
         <div className="rounded-2xl p-6 space-y-4" style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}>
