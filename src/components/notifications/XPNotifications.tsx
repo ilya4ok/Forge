@@ -2,8 +2,10 @@
 
 import { useNotificationStore } from '@/lib/notifications'
 import { ACHIEVEMENT_MAP, TIER_COLORS } from '@/lib/achievements'
+import { useT } from '@/lib/i18n'
 
 export function XPNotifications() {
+  const { t } = useT()
   const { notifications } = useNotificationStore()
 
   return (
@@ -60,7 +62,7 @@ export function XPNotifications() {
             }}>{def.emoji}</span>
             <div>
               <div style={{ fontSize: '10px', color: colors.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
-                Достижение разблокировано
+                {t.dashboard.achievementUnlocked}
               </div>
               <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '1px' }}>{def.label}</div>
               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{def.desc}</div>

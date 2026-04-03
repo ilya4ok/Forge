@@ -1,7 +1,13 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 
 export default function PrivacyPage() {
+  const { t } = useT()
+  const s = t.privacy.sections
+
   return (
     <div className="min-h-screen p-6 sm:p-10" style={{ background: '#060510' }}>
       <div className="max-w-2xl mx-auto">
@@ -10,72 +16,70 @@ export default function PrivacyPage() {
           className="inline-flex items-center gap-2 text-sm text-white/30 hover:text-white/60 transition-colors mb-8"
         >
           <ArrowLeft size={15} />
-          Назад
+          {t.privacy.back}
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
           <img src="/forge-logo.svg" alt="Forge" className="h-10 w-10" />
-          <h1 className="text-2xl font-bold text-white">Политика конфиденциальности</h1>
+          <h1 className="text-2xl font-bold text-white">{t.privacy.title}</h1>
         </div>
 
         <div
           className="rounded-2xl p-6 sm:p-8 space-y-6 text-sm leading-relaxed"
           style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}
         >
-          <p className="text-white/40 text-xs">Последнее обновление: апрель 2025</p>
+          <p className="text-white/40 text-xs">{t.privacy.lastUpdated}</p>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white">Что мы собираем</h2>
-            <p className="text-white/50">При регистрации и использовании Forge мы собираем:</p>
+            <h2 className="text-base font-semibold text-white">{s.whatWeCollect.title}</h2>
+            <p className="text-white/50">{s.whatWeCollect.intro}</p>
             <ul className="list-disc list-inside space-y-1 text-white/50 ml-2">
-              <li>Email адрес и имя</li>
-              <li>Записи дневника</li>
-              <li>Задачи, расписание и активности</li>
-              <li>API ключ Anthropic (если ты его добавляешь)</li>
+              {s.whatWeCollect.items.map((item, i) => <li key={i}>{item}</li>)}
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white">Где хранятся данные</h2>
+            <h2 className="text-base font-semibold text-white">{s.whereStored.title}</h2>
             <p className="text-white/50">
-              Все данные хранятся в базе данных <span className="text-white/70">Supabase</span> — облачном сервисе с шифрованием данных на уровне инфраструктуры. Данные защищены так, что один пользователь не может получить доступ к данным другого.
+              {s.whereStored.p1.split('Supabase').map((part, i, arr) =>
+                i < arr.length - 1
+                  ? <span key={i}>{part}<span className="text-white/70">Supabase</span></span>
+                  : <span key={i}>{part}</span>
+              )}
             </p>
-            <p className="text-white/50">
-              Владелец сервиса (разработчик) имеет административный доступ к базе данных.
-            </p>
+            <p className="text-white/50">{s.whereStored.p2}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white">AI анализ дневника</h2>
+            <h2 className="text-base font-semibold text-white">{s.aiAnalysis.title}</h2>
             <p className="text-white/50">
-              Если ты используешь функцию психологического профиля, записи дневника передаются в <span className="text-white/70">Anthropic (Claude AI)</span> для обработки. Anthropic не хранит эти данные постоянно и не использует их для обучения моделей.
+              {s.aiAnalysis.p1.split('Anthropic (Claude AI)').map((part, i, arr) =>
+                i < arr.length - 1
+                  ? <span key={i}>{part}<span className="text-white/70">Anthropic (Claude AI)</span></span>
+                  : <span key={i}>{part}</span>
+              )}
             </p>
-            <p className="text-white/50">
-              Анализ происходит только по твоему явному запросу — кнопка "Обновить базу".
-            </p>
+            <p className="text-white/50">{s.aiAnalysis.p2}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white">Чего мы не делаем</h2>
+            <h2 className="text-base font-semibold text-white">{s.whatWeDontDo.title}</h2>
             <ul className="list-disc list-inside space-y-1 text-white/50 ml-2">
-              <li>Не продаём твои данные</li>
-              <li>Не передаём данные третьим лицам (кроме Supabase и Anthropic, указанных выше)</li>
-              <li>Не используем данные для рекламы</li>
+              {s.whatWeDontDo.items.map((item, i) => <li key={i}>{item}</li>)}
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white">Твои права</h2>
+            <h2 className="text-base font-semibold text-white">{s.yourRights.title}</h2>
             <ul className="list-disc list-inside space-y-1 text-white/50 ml-2">
-              <li>Экспортировать свои данные (раздел Профиль)</li>
-              <li>Удалить аккаунт и все данные — напиши на <span className="text-white/70">support@forgeyou.dev</span></li>
+              {s.yourRights.items.map((item, i) => <li key={i}>{item}</li>)}
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white">Контакт</h2>
+            <h2 className="text-base font-semibold text-white">{s.contact.title}</h2>
             <p className="text-white/50">
-              Вопросы по конфиденциальности: <span className="text-white/70">support@forgeyou.dev</span>
+              {s.contact.text} <span className="text-white/70">support@forgeyou.dev</span>
             </p>
           </section>
         </div>

@@ -7,19 +7,20 @@ import {
 } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
-
-const NAV = [
-  { href: '/',          icon: LayoutDashboard, label: 'Главная' },
-  { href: '/chat',      icon: Bot,             label: 'Помощник' },
-  { href: '/schedule',  icon: CalendarDays,    label: 'Расписание' },
-  { href: '/pool',      icon: Layers,          label: 'Активности' },
-  { href: '/journal',   icon: BookMarked,      label: 'Дневник' },
-]
-
+import { useT, type Lang } from '@/lib/i18n'
 
 export function Sidebar() {
   const pathname = usePathname()
   const { userName, avatarUrl } = useStore()
+  const { t, lang, setLang } = useT()
+
+  const NAV = [
+    { href: '/',         icon: LayoutDashboard, label: t.nav.home },
+    { href: '/chat',     icon: Bot,             label: t.nav.assistant },
+    { href: '/schedule', icon: CalendarDays,    label: t.nav.schedule },
+    { href: '/pool',     icon: Layers,          label: t.nav.activities },
+    { href: '/journal',  icon: BookMarked,      label: t.nav.journal },
+  ]
 
   const firstLetter = userName.trim().charAt(0).toUpperCase() || '?'
 
@@ -77,6 +78,27 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Language switcher */}
+      <div className="mt-auto flex items-center justify-center gap-1 lg:w-full lg:justify-start lg:px-3">
+        {(['en', 'uk'] as Lang[]).map((l) => (
+          <button
+            key={l}
+            onClick={() => setLang(l)}
+            className={cn(
+              'rounded-lg px-2 py-1 text-xs font-semibold uppercase transition-all',
+              lang === l
+                ? 'text-primary'
+                : 'text-sidebar-foreground hover:text-foreground'
+            )}
+            style={lang === l ? {
+              background: 'linear-gradient(135deg, rgba(129,140,248,0.15), rgba(167,139,250,0.08))',
+            } : undefined}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
 
     </aside>
   )

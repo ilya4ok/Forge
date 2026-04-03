@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { playTaskComplete, playClick } from '@/lib/sounds'
 import { format, addDays, isToday } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
+import { uk as ukLocale } from 'date-fns/locale'
 import { Monitor, Check, Sun, Home, Pencil, Trash2, Copy, Layers, X, ArrowLeft, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
 import { calcXP, catColor, catLabel, catEmoji, type Category } from '@/lib/types'
 import { Portal } from '@/components/Portal'
+import { useT } from '@/lib/i18n'
 
 const PRESETS = [
   { key: 'sport',    label: 'Спорт',      color: '#f87171', emoji: '🏃', emojis: ['🏋️','🏃','⚽','🎯','🏊','🚴','🥊','🧘','🏆','🤸','🎽','🏅','🏄','🥅','🎾','🛹'] },
@@ -22,7 +24,7 @@ const PRESETS = [
 ] as const
 type Preset = typeof PRESETS[number]
 
-const DIFFICULTY_LABELS = ['', 'Легко', 'Нормально', 'Сложно', 'Хардкор', 'Легенда']
+
 const DIFFICULTY_COEF   = [0,  0.75,   1.0,         1.25,    1.5,       2.0]
 
 function AddTaskModal({ dateStr, onClose, onAdd }: {
@@ -31,6 +33,8 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
   onAdd: (task: { title: string; emoji: string; track: string; xp: number; durationMins: number; timeStart?: string }) => void
 }) {
   const { categories, addCategory, templateTasks } = useStore()
+  const { t, lang } = useT()
+  const dateLocale = lang === 'uk' ? ukLocale : enUS
   const [step, setStep] = useState<'source' | 'pool' | 'category' | 'details'>('source')
   const [preset, setPreset] = useState<Preset | null>(null)
   const [cat, setCat] = useState<Category | null>(null)
@@ -79,7 +83,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
         {step === 'source' && (
           <>
             <div className="flex items-center justify-between">
-              <p className="text-base font-semibold text-foreground">Добавить задачу</p>
+              <p className="text-base font-semibold text-foreground">{t.schedule.addTask}</p>
               <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors"><X size={16} /></button>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -90,8 +94,8 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
               >
                 <span className="text-3xl">📦</span>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-foreground">Из пула</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Готовые карточки</p>
+                  <p className="text-sm font-semibold text-foreground">{t.schedule.fromPool}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.schedule.readyCards}</p>
                 </div>
               </button>
               <button
@@ -101,8 +105,8 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
               >
                 <span className="text-3xl">✏️</span>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-foreground">Своя задача</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Создать с нуля</p>
+                  <p className="text-sm font-semibold text-foreground">{t.schedule.customTask}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.schedule.createFromScratch}</p>
                 </div>
               </button>
             </div>
@@ -113,15 +117,15 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
           <>
             <div className="flex items-center gap-3">
               <button onClick={() => setStep('source')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft size={14} /> Назад
+                <ArrowLeft size={14} /> {t.common.back}
               </button>
-              <p className="text-base font-semibold text-foreground">Из пула</p>
+              <p className="text-base font-semibold text-foreground">{t.schedule.fromPool}</p>
               <button onClick={onClose} className="ml-auto text-muted-foreground hover:text-foreground transition-colors"><X size={16} /></button>
             </div>
             {templateTasks.length === 0 ? (
               <div className="text-center py-8 space-y-2">
                 <p className="text-3xl">📭</p>
-                <p className="text-sm text-muted-foreground">Пул пустой — сначала добавь карточки в разделе Пул</p>
+                <p className="text-sm text-muted-foreground">{t.pool.emptyTitle}</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -138,7 +142,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
                       <span className="text-xl shrink-0">{tmpl.emoji || tmplCat?.emoji || '📋'}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{tmpl.title}</p>
-                        <p className="text-xs text-muted-foreground">{tmplCat?.label ?? ''} · {tmpl.durationMins < 60 ? `${tmpl.durationMins}м` : `${tmpl.durationMins/60}ч`} · +{tmpl.xp} XP</p>
+                        <p className="text-xs text-muted-foreground">{tmplCat?.label ?? ''} · {tmpl.durationMins < 60 ? `${tmpl.durationMins}m` : `${tmpl.durationMins/60}h`} · +{tmpl.xp} XP</p>
                       </div>
                     </button>
                   )
@@ -152,9 +156,9 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
           <>
             <div className="flex items-center gap-3">
               <button onClick={() => setStep('source')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft size={14} /> Назад
+                <ArrowLeft size={14} /> {t.common.back}
               </button>
-              <p className="text-base font-semibold text-foreground">Выбери категорию</p>
+              <p className="text-base font-semibold text-foreground">{t.schedule.chooseCategory}</p>
               <button onClick={onClose} className="ml-auto text-muted-foreground hover:text-foreground transition-colors"><X size={16} /></button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -177,7 +181,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
           <>
             <div className="flex items-center gap-3">
               <button onClick={() => setStep('category')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft size={14} /> Назад
+                <ArrowLeft size={14} /> {t.common.back}
               </button>
               <div className="flex items-center gap-2 rounded-xl px-3 py-1" style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
                 <span className="text-base">{emoji}</span>
@@ -188,7 +192,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
 
             {/* Emoji */}
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Иконка</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.schedule.icon}</p>
               <div className="grid grid-cols-8 gap-1.5">
                 {preset!.emojis.map(e => (
                   <button key={e} onClick={() => setSelectedEmoji(e)}
@@ -201,13 +205,13 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
 
             {/* Title */}
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Название</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.schedule.taskName}</p>
               <input
                 autoFocus
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
-                placeholder="Например: Утренняя пробежка"
+                placeholder={t.schedule.taskNamePlaceholder}
                 maxLength={60}
                 className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none"
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
@@ -217,7 +221,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
             {/* Difficulty */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Сложность</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.schedule.difficulty}</p>
                 <span className="rounded-lg px-2 py-0.5 text-xs font-bold" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>+{xp} XP</span>
               </div>
               <div className="flex gap-2">
@@ -225,7 +229,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
                   <button key={d} onClick={() => setDifficulty(d)}
                     className="flex-1 rounded-xl py-2 text-xs font-semibold transition-all"
                     style={{ background: difficulty === d ? `${color}20` : 'rgba(255,255,255,0.04)', border: `1px solid ${difficulty === d ? color + '50' : 'rgba(255,255,255,0.08)'}`, color: difficulty === d ? color : 'rgba(255,255,255,0.35)' }}
-                  >{DIFFICULTY_LABELS[d]}</button>
+                  >{(['', ...t.schedule.difficulties])[d]}</button>
                 ))}
               </div>
             </div>
@@ -233,20 +237,20 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
             {/* Time + Duration */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Время начала</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.schedule.startTime}</p>
                 <input type="time" value={timeStart} onChange={e => setTimeStart(e.target.value)}
                   className="w-full rounded-xl px-3 py-2 text-sm text-foreground outline-none"
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', colorScheme: 'dark' }}
                 />
               </div>
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Длительность</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.schedule.duration}</p>
                 <div className="flex flex-wrap gap-1">
                   {[30,45,60,90,120].map(m => (
                     <button key={m} onClick={() => setDurationMins(m)}
                       className="rounded-lg px-2 py-1 text-xs font-semibold transition-all"
                       style={{ background: durationMins === m ? `${color}20` : 'rgba(255,255,255,0.04)', border: `1px solid ${durationMins === m ? color + '50' : 'rgba(255,255,255,0.08)'}`, color: durationMins === m ? color : 'rgba(255,255,255,0.35)' }}
-                    >{m < 60 ? `${m}м` : `${m/60}ч`}</button>
+                    >{m < 60 ? `${m}m` : `${m/60}h`}</button>
                   ))}
                 </div>
               </div>
@@ -258,7 +262,7 @@ function AddTaskModal({ dateStr, onClose, onAdd }: {
               className="w-full rounded-xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
             >
-              Добавить задачу
+              {t.schedule.addTaskBtn}
             </button>
           </>
         )}
@@ -414,6 +418,8 @@ function getSleepTimes(job?: { end: string }): { sleepRitual: string; bedtime: s
 
 export default function SchedulePage() {
   const { tasks, dayJobs, categories, scheduleSettings, completeTask, uncompleteTask, updateTaskTime, updateTaskDuration, updateTaskTitle, addTask, deleteTask, moveTaskTo } = useStore()
+  const { t, lang } = useT()
+  const dateLocale = lang === 'uk' ? ukLocale : enUS
   const [addingDay, setAddingDay] = useState<string | null>(null)
   const [copiedDay, setCopiedDay] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
@@ -422,7 +428,7 @@ export default function SchedulePage() {
   const [weekOffset, setWeekOffset] = useState(0)
 
   function copyDaySummary(dateStr: string, dayTasks: typeof tasks, job: typeof dayJobs[0] | undefined) {
-    const dateLabel = format(new Date(dateStr + 'T12:00:00'), 'd MMMM yyyy (EEEE)', { locale: ru })
+    const dateLabel = format(new Date(dateStr + 'T12:00:00'), 'd MMMM yyyy (EEEE)', { locale: dateLocale })
     const done = dayTasks.filter(t => t.completed)
     const skipped = dayTasks.filter(t => t.skipped)
     const notDone = dayTasks.filter(t => !t.completed && !t.skipped)
@@ -430,13 +436,13 @@ export default function SchedulePage() {
 
     const lines = [
       `📅 ${dateLabel}`,
-      ...(job ? [`🖥 Работа: ${job.start}–${job.end}`] : []),
+      ...(job ? [`🖥 Work: ${job.start}–${job.end}`] : []),
       ``,
-      ...(done.length > 0 ? [`✅ Выполнено (${done.length}):`, ...done.map(t => `  ${t.emoji ?? ''} ${t.title} +${t.xp} XP`)] : []),
-      ...(skipped.length > 0 ? [`⏭ Пропущено (${skipped.length}):`, ...skipped.map(t => `  ${t.emoji ?? ''} ${t.title}`)] : []),
-      ...(notDone.length > 0 ? [`○ Не выполнено (${notDone.length}):`, ...notDone.map(t => `  ${t.emoji ?? ''} ${t.title}`)] : []),
+      ...(done.length > 0 ? [`✅ Done (${done.length}):`, ...done.map(t => `  ${t.emoji ?? ''} ${t.title} +${t.xp} XP`)] : []),
+      ...(skipped.length > 0 ? [`⏭ Skipped (${skipped.length}):`, ...skipped.map(t => `  ${t.emoji ?? ''} ${t.title}`)] : []),
+      ...(notDone.length > 0 ? [`○ Not done (${notDone.length}):`, ...notDone.map(t => `  ${t.emoji ?? ''} ${t.title}`)] : []),
       ``,
-      `⚡ XP за день: ${xp}`,
+      `⚡ XP today: ${xp}`,
     ]
 
     navigator.clipboard.writeText(lines.join('\n'))
@@ -479,9 +485,9 @@ export default function SchedulePage() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Расписание</h1>
+          <h1 className="text-2xl font-bold text-white">{t.schedule.title}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {format(new Date(selectedDate + 'T12:00:00'), 'd MMMM yyyy, EEEE', { locale: ru })}
+            {format(new Date(selectedDate + 'T12:00:00'), 'd MMMM yyyy, EEEE', { locale: dateLocale })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -491,7 +497,7 @@ export default function SchedulePage() {
             style={{ background: '#12121e', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}
           >
             <Layers size={13} />
-            <span className="hidden sm:inline">Активности</span>
+            <span className="hidden sm:inline">{t.nav.activities}</span>
           </Link>
         </div>
       </div>
@@ -537,7 +543,7 @@ export default function SchedulePage() {
                 }}
               >
                 <p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isSelected ? 'text-primary' : isTodayDay ? 'text-primary/50' : 'text-white/25'}`}>
-                  {format(day, 'EEE', { locale: ru })}
+                  {format(day, 'EEE', { locale: dateLocale })}
                 </p>
                 <p className={`text-lg font-black leading-tight ${isSelected ? 'text-white' : 'text-white/50'}`}>
                   {format(day, 'd')}
@@ -568,7 +574,7 @@ export default function SchedulePage() {
                 }}
               >
                 <p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isSelected ? 'text-primary' : isTodayDay ? 'text-primary/50' : 'text-white/25'}`}>
-                  {format(day, 'EEE', { locale: ru })}
+                  {format(day, 'EEE', { locale: dateLocale })}
                 </p>
                 <p className={`text-lg font-black leading-tight ${isSelected ? 'text-white' : 'text-white/50'}`}>
                   {format(day, 'd')}
@@ -651,10 +657,10 @@ export default function SchedulePage() {
               <div className="px-5 pt-5 pb-3 flex items-start justify-between">
                 <div>
                   <p className={`text-xs font-bold uppercase tracking-widest ${isTodayDay ? 'text-primary' : 'text-white/30'}`}>
-                    {format(day, 'EEEE', { locale: ru })}
+                    {format(day, 'EEEE', { locale: dateLocale })}
                   </p>
                   <p className={`text-xl font-black mt-0.5 ${isTodayDay ? 'text-white' : 'text-white/60'}`}>
-                    {format(day, 'd MMMM', { locale: ru })}
+                    {format(day, 'd MMMM', { locale: dateLocale })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
@@ -667,7 +673,7 @@ export default function SchedulePage() {
                         color: doneCount === dayTasks.length ? '#818cf8' : 'rgba(255,255,255,0.3)',
                       }}
                     >
-                      {doneCount === dayTasks.length ? '🎉 Готово' : `${doneCount} / ${dayTasks.length}`}
+                      {doneCount === dayTasks.length ? `🎉 ${t.common.saved}` : `${doneCount} / ${dayTasks.length}`}
                     </div>
                   )}
                   <button
@@ -677,7 +683,7 @@ export default function SchedulePage() {
                       background: copiedDay === dateStr ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.04)',
                       color: copiedDay === dateStr ? '#34d399' : 'rgba(255,255,255,0.25)',
                     }}
-                    title="Скопировать итоги дня"
+                    title="Copy day summary"
                   >
                     <Copy size={12} />
                   </button>
@@ -696,7 +702,7 @@ export default function SchedulePage() {
                   >
                     <span className="text-sm shrink-0">⚠️</span>
                     <p className="text-[11px]" style={{ color: 'rgba(251,191,36,0.65)' }}>
-                      Не все задачи успеть до работы — перенеси лишние через чат
+                      Not all tasks fit before work — move extra ones via chat
                     </p>
                   </div>
                 </div>
@@ -708,7 +714,7 @@ export default function SchedulePage() {
                   <div className="flex items-center gap-2 mb-3">
                     <Sun size={12} style={{ color: 'rgba(251,191,36,0.45)' }} />
                     <span className="text-[11px] font-semibold text-white/25 uppercase tracking-widest">
-                      До работы
+                      Before work
                     </span>
                   </div>
                 )}
@@ -745,7 +751,7 @@ export default function SchedulePage() {
                       }}
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl text-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>+</span>
-                      <span className="text-xs font-semibold text-white/20 group-hover:text-white/40 transition-colors">Добавить</span>
+                      <span className="text-xs font-semibold text-white/20 group-hover:text-white/40 transition-colors">{t.common.add}</span>
                     </button>
                   )}
                 </div>
@@ -756,9 +762,9 @@ export default function SchedulePage() {
                 <div className="flex items-center gap-2.5 px-5 pb-3">
                   <span style={{ fontSize: '13px', flexShrink: 0 }}>🚌</span>
                   <span className="text-xs font-bold text-white/30">
-                    Выезд {departureTime}
+                    Depart {departureTime}
                   </span>
-                  <span className="text-[10px] text-white/15 ml-1">({scheduleSettings.commuteToWorkMin} мин до работы)</span>
+                  <span className="text-[10px] text-white/15 ml-1">({scheduleSettings.commuteToWorkMin} min to work)</span>
                 </div>
               )}
 
@@ -778,7 +784,7 @@ export default function SchedulePage() {
                     <Monitor size={16} className="text-white/30" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-white/55">{job.label ?? 'Работа в маке'}</p>
+                    <p className="text-sm font-bold text-white/55">{job.label ?? 'Work'}</p>
                     <p className="text-xs text-white/25 mt-0.5">{job.start} — {job.end}</p>
                   </div>
                   <span className="text-sm font-black text-white/20">{job.start}</span>
@@ -790,7 +796,7 @@ export default function SchedulePage() {
                 <div className="flex items-center gap-2.5 px-5 pb-4">
                   <Home size={13} style={{ color: 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
                   <span className="text-xs font-medium text-white/18">
-                    Дома в {arrivalTime ?? minToTime(timeToMin(job.end) + 60)}
+                    Home at {arrivalTime ?? minToTime(timeToMin(job.end) + 60)}
                   </span>
                 </div>
               )}
@@ -801,7 +807,7 @@ export default function SchedulePage() {
                   <div className="flex items-center gap-2 mb-3">
                     <Home size={12} style={{ color: 'rgba(255,255,255,0.25)' }} />
                     <span className="text-[11px] font-semibold text-white/25 uppercase tracking-widest">
-                      После работы
+                      After work
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -836,7 +842,7 @@ export default function SchedulePage() {
                       }}
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl text-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>+</span>
-                      <span className="text-xs font-semibold text-white/20 group-hover:text-white/40 transition-colors">Добавить</span>
+                      <span className="text-xs font-semibold text-white/20 group-hover:text-white/40 transition-colors">{t.common.add}</span>
                     </button>
                   </div>
                 </div>
@@ -854,7 +860,7 @@ export default function SchedulePage() {
                   >
                     <span className="text-sm shrink-0">⚠️</span>
                     <p className="text-[11px]" style={{ color: 'rgba(248,113,113,0.65)' }}>
-                      Домой в {arrivalTime} — позже целевого отбоя, сон сдвинется
+                      Home at {arrivalTime} — later than target bedtime, sleep will shift
                     </p>
                   </div>
                 </div>
@@ -873,9 +879,9 @@ export default function SchedulePage() {
         >
           <span className="text-lg">💡</span>
           <p className="text-sm text-muted-foreground">
-            Добавь задачи вручную ниже или{' '}
-            <Link href="/chat" className="text-primary hover:opacity-80 transition-opacity">настрой через помощника</Link>
-            {' '}— он разложит всё по времени сам.
+            Add tasks manually below or{' '}
+            <Link href="/chat" className="text-primary hover:opacity-80 transition-opacity">set up via assistant</Link>
+            {' '}— it will arrange everything by time.
           </p>
         </div>
       )}
@@ -1013,7 +1019,7 @@ function ScheduleTaskCard({
         {/* Duration */}
         {dur > 0 && (
           <span className="rounded-lg px-2 py-0.5 text-xs font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
-            {dur < 60 ? `${dur}м` : `${dur / 60}ч`}
+            {dur < 60 ? `${dur}m` : `${dur / 60}h`}
           </span>
         )}
       </div>
@@ -1034,8 +1040,8 @@ function ScheduleTaskCard({
           }}
         >
           {task.completed
-            ? <><Check size={12} strokeWidth={3} /> Выполнено</>
-            : <><div className="h-2 w-2 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} /> Отметить</>
+            ? <><Check size={12} strokeWidth={3} /> Done</>
+            : <><div className="h-2 w-2 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} /> Mark done</>
           }
         </button>
       </div>
@@ -1048,7 +1054,7 @@ function ScheduleTaskCard({
           onClick={e => e.stopPropagation()}
         >
           <div className="pt-2">
-            <label className="text-[10px] font-semibold uppercase tracking-wide block mb-1" style={{ color: `${color}80` }}>Название</label>
+            <label className="text-[10px] font-semibold uppercase tracking-wide block mb-1" style={{ color: `${color}80` }}>Title</label>
             <input
               value={localTitle}
               onChange={e => setLocalTitle(e.target.value)}
@@ -1060,7 +1066,7 @@ function ScheduleTaskCard({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wide block mb-1" style={{ color: `${color}80` }}>Начало</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide block mb-1" style={{ color: `${color}80` }}>Start</label>
               <input type="time" defaultValue={displayTime ?? ''}
                 className="w-full rounded-lg px-2.5 py-2 text-sm font-bold tabular-nums outline-none text-white"
                 style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${color}30`, colorScheme: 'dark' }}
@@ -1069,7 +1075,7 @@ function ScheduleTaskCard({
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wide block mb-1" style={{ color: `${color}80` }}>Конец</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide block mb-1" style={{ color: `${color}80` }}>End</label>
               <input type="time" defaultValue={endTime ?? ''}
                 className="w-full rounded-lg px-2.5 py-2 text-sm font-bold tabular-nums outline-none text-white"
                 style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${color}30`, colorScheme: 'dark' }}

@@ -8,14 +8,14 @@ export async function POST(req: NextRequest) {
     const { month, entries, existingProfiles, userName, apiKey } = await req.json()
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Добавь API ключ Anthropic в профиле' }, { status: 400 })
+      return NextResponse.json({ error: 'Add your Anthropic API key in the profile' }, { status: 400 })
     }
 
     const client = new Anthropic({ apiKey })
-    const name = (userName as string)?.trim() || 'пользователь'
+    const name = (userName as string)?.trim() || 'user'
 
     if (!entries || entries.length === 0) {
-      return NextResponse.json({ error: 'Нет записей за этот месяц' }, { status: 400 })
+      return NextResponse.json({ error: 'No entries for this month' }, { status: 400 })
     }
 
     const entriesText = entries
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     const block = response.content?.[0]
     if (!block || block.type !== 'text') {
-      return NextResponse.json({ error: 'AI не вернул ответ' }, { status: 500 })
+      return NextResponse.json({ error: 'AI returned no response' }, { status: 500 })
     }
 
     return NextResponse.json({ profile: block.text.trim() })

@@ -2,18 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
+import { uk as ukLocale } from 'date-fns/locale'
 import { Flame, Zap, CheckCircle2, Circle, ChevronRight, CalendarDays, Layers, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
 import { catColor, catLabel, catEmoji } from '@/lib/types'
 import { ALL_ACHIEVEMENTS, TIER_COLORS } from '@/lib/achievements'
-
-const TIER_CONFIG = {
-  easy:   { label: 'Лёгкие',  color: TIER_COLORS.easy.color,   bg: 'rgba(52,211,153,0.08)',   border: 'rgba(52,211,153,0.2)' },
-  medium: { label: 'Средние', color: TIER_COLORS.medium.color, bg: 'rgba(245,158,11,0.08)',   border: 'rgba(245,158,11,0.2)' },
-  hard:   { label: 'Тяжёлые', color: TIER_COLORS.hard.color,   bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.2)' },
-}
+import { useT } from '@/lib/i18n'
 
 const LEGACY_TRACKS = ['ai', 'design', 'selfdevelopment', 'mediabuy', 'english', 'polish', 'gym']
 
@@ -43,13 +39,21 @@ function AchievementIcon({ ach, done, cfg }: { ach: { id: string; emoji: string;
 }
 
 function AchievementsBlock({ achievements }: { achievements: string[] }) {
+  const { t } = useT()
   const [showAll, setShowAll] = useState(false)
   const tiers = ['easy', 'medium', 'hard'] as const
+
+  const TIER_CONFIG = {
+    easy:   { label: t.dashboard.achievementTiers.easy,   color: TIER_COLORS.easy.color,   bg: 'rgba(52,211,153,0.08)',   border: 'rgba(52,211,153,0.2)' },
+    medium: { label: t.dashboard.achievementTiers.medium, color: TIER_COLORS.medium.color, bg: 'rgba(245,158,11,0.08)',   border: 'rgba(245,158,11,0.2)' },
+    hard:   { label: t.dashboard.achievementTiers.hard,   color: TIER_COLORS.hard.color,   bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.2)' },
+  }
+
   return (
     <div className="rounded-2xl p-5 space-y-4" style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}>
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="font-semibold text-foreground">Достижения</h2>
+          <h2 className="font-semibold text-foreground">{t.dashboard.achievements}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{achievements.length} / {ALL_ACHIEVEMENTS.length}</p>
         </div>
         <button
@@ -61,7 +65,7 @@ function AchievementsBlock({ achievements }: { achievements: string[] }) {
             border: '1px solid rgba(129,140,248,0.25)',
           }}
         >
-          {showAll ? 'Скрыть' : 'Показать все'}
+          {showAll ? t.dashboard.hide : t.dashboard.showAll}
         </button>
       </div>
       {tiers.map(tier => {
@@ -86,7 +90,7 @@ function AchievementsBlock({ achievements }: { achievements: string[] }) {
       })}
       {achievements.length === 0 && !showAll && (
         <p className="text-sm text-muted-foreground text-center py-4">
-          Выполни задачи чтобы получить первые достижения
+          {t.dashboard.noAchievements}
         </p>
       )}
     </div>
@@ -94,12 +98,15 @@ function AchievementsBlock({ achievements }: { achievements: string[] }) {
 }
 
 const XP_PER_LEVEL = 200
-const RANK_NAMES = ['Новичок', 'Стажёр', 'Специалист', 'Профи', 'Эксперт', 'Мастер', 'Гуру', 'Легенда', 'Элита']
 
 export default function Dashboard() {
+  const { t, lang } = useT()
   const { tasks, dayJobs, streak, trackXP, onboardingDone, processOnOpen, completeTask, userName, categories, achievements } = useStore()
 
   useEffect(() => { processOnOpen() }, [processOnOpen])
+
+  const dateLocale = lang === 'uk' ? ukLocale : enUS
+  const RANK_NAMES = t.dashboard.ranks
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayJob = dayJobs.find(j => j.date === today)
@@ -112,16 +119,15 @@ export default function Dashboard() {
   const rankIndex = Math.min(Math.floor((level - 1) / 3), RANK_NAMES.length - 1)
   const rankName = RANK_NAMES[rankIndex]
 
-  // Merge user categories + legacy tracks (for users with old data), deduplicate by label
   const allTrackIds = [...new Set([
     ...categories.map(c => c.id),
-    ...LEGACY_TRACKS.filter(t => (trackXP[t] || 0) > 0),
+    ...LEGACY_TRACKS.filter(tr => (trackXP[tr] || 0) > 0),
   ])]
   const seenLabels = new Set<string>()
   const trackEntries = allTrackIds
-    .map(t => [t, trackXP[t] || 0] as [string, number])
-    .filter(([t]) => {
-      const label = catLabel(t, categories)
+    .map(tr => [tr, trackXP[tr] || 0] as [string, number])
+    .filter(([tr]) => {
+      const label = catLabel(tr, categories)
       if (seenLabels.has(label)) return false
       seenLabels.add(label)
       return true
@@ -129,14 +135,6 @@ export default function Dashboard() {
     .filter(([, xp]) => xp > 0)
     .sort(([, a], [, b]) => b - a)
   const maxXP = Math.max(...trackEntries.map(([, xp]) => xp), 1)
-
-  const [greeting, setGreeting] = useState('')
-  useEffect(() => {
-    const h = new Date().getHours()
-    if (h < 12) setGreeting('Доброе утро')
-    else if (h < 18) setGreeting('Добрый день')
-    else setGreeting('Добрый вечер')
-  }, [])
 
   const hasData = tasks.length > 0 || dayJobs.length > 0 || categories.length > 0
   if (!onboardingDone && !hasData) {
@@ -150,9 +148,9 @@ export default function Dashboard() {
         </div>
         <style>{`@keyframes wave{0%,100%{transform:rotate(0deg)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}`}</style>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Привет, {userName}!</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t.dashboard.onboarding.greeting(userName)}</h1>
           <p className="mt-3 max-w-sm text-muted-foreground leading-relaxed">
-            Два шага — и твоё расписание готово.
+            {t.dashboard.onboarding.subtitle}
           </p>
         </div>
 
@@ -167,8 +165,8 @@ export default function Dashboard() {
               <Layers size={18} style={{ color: '#818cf8' }} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">1. Добавь свои активности</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Зал, учёба, языки — с иконкой, сложностью и временем</p>
+              <p className="text-sm font-semibold text-foreground">{t.dashboard.onboarding.step1}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.dashboard.onboarding.step1hint}</p>
             </div>
             <ChevronRight size={16} className="ml-auto shrink-0 text-muted-foreground" />
           </Link>
@@ -183,15 +181,15 @@ export default function Dashboard() {
               <MessageSquare size={18} style={{ color: '#818cf8' }} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">2. Настрой расписание</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Скажи помощнику когда работаешь — он всё разложит</p>
+              <p className="text-sm font-semibold text-foreground">{t.dashboard.onboarding.step2}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.dashboard.onboarding.step2hint}</p>
             </div>
             <ChevronRight size={16} className="ml-auto shrink-0 text-muted-foreground" />
           </Link>
 
           <div className="flex items-center gap-3 mt-1">
             <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-            <span className="text-xs text-muted-foreground">или</span>
+            <span className="text-xs text-muted-foreground">{t.dashboard.onboarding.or}</span>
             <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
           </div>
 
@@ -201,7 +199,7 @@ export default function Dashboard() {
             style={{ color: 'rgba(255,255,255,0.35)' }}
           >
             <CalendarDays size={15} />
-            Добавить задачи в ручную
+            {t.dashboard.onboarding.addManually}
           </Link>
         </div>
       </div>
@@ -214,11 +212,11 @@ export default function Dashboard() {
       {/* Header */}
       <div className="space-y-0.5 mb-2">
         <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
-          {format(new Date(), 'EEEE, d MMMM yyyy', { locale: ru })}
+          {format(new Date(), 'EEEE, d MMMM yyyy', { locale: dateLocale })}
         </p>
       </div>
 
-      {/* Stats — 3 cards (responsive) */}
+      {/* Stats — 3 cards */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 md:gap-3">
 
         <div
@@ -231,7 +229,7 @@ export default function Dashboard() {
               <Flame size={16} className="text-orange-400" />
             </div>
             <p className="text-4xl font-black text-orange-300 leading-none">{streak.current}</p>
-            <p className="text-xs text-orange-400/55 font-medium leading-tight">дней<br />стрик</p>
+            <p className="text-xs text-orange-400/55 font-medium leading-tight">{t.common.days}<br />{t.common.streak.toLowerCase()}</p>
           </div>
         </div>
 
@@ -245,7 +243,7 @@ export default function Dashboard() {
               <Zap size={16} className="text-primary" />
             </div>
             <p className="text-4xl font-black text-primary leading-none">{totalXP}</p>
-            <p className="text-xs text-primary/55 font-medium leading-tight">очков<br />опыта</p>
+            <p className="text-xs text-primary/55 font-medium leading-tight">{t.common.xp}</p>
           </div>
         </div>
 
@@ -262,7 +260,7 @@ export default function Dashboard() {
               <CheckCircle2 size={16} className="text-emerald-400" />
             </div>
             <p className="text-4xl font-black text-emerald-300 leading-none">{doneTodayCount}<span className="text-lg text-emerald-400/40 font-bold">/{todayTasks.length}</span></p>
-            <p className="text-xs text-emerald-400/55 font-medium leading-tight">задач<br />сегодня</p>
+            <p className="text-xs text-emerald-400/55 font-medium leading-tight">{t.common.tasks.toLowerCase()}<br />{t.common.today.toLowerCase()}</p>
           </div>
         </div>
 
@@ -283,7 +281,7 @@ export default function Dashboard() {
             </div>
             <div>
               <span className="text-sm font-semibold text-foreground">{rankName}</span>
-              <span className="ml-1.5 text-xs text-muted-foreground">· ур. {level}</span>
+              <span className="ml-1.5 text-xs text-muted-foreground">· {t.common.level.toLowerCase()} {level}</span>
             </div>
           </div>
           <span className="text-xs text-muted-foreground tabular-nums">{xpInLevel} / {XP_PER_LEVEL} XP</span>
@@ -299,7 +297,7 @@ export default function Dashboard() {
           />
         </div>
         <p className="mt-1.5 text-[11px] text-right" style={{ color: 'rgba(255,255,255,0.2)' }}>
-          ещё {XP_PER_LEVEL - xpInLevel} XP до уровня {level + 1}
+          {t.dashboard.xpToLevel(XP_PER_LEVEL - xpInLevel, level + 1)}
         </p>
       </div>
 
@@ -312,7 +310,7 @@ export default function Dashboard() {
           style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Сегодня</h2>
+            <h2 className="font-semibold text-foreground">{t.dashboard.todaySection}</h2>
             <div className="flex items-center gap-2.5">
               <span className="text-sm font-medium text-muted-foreground tabular-nums">
                 {doneTodayCount}/{todayTasks.length}
@@ -333,7 +331,7 @@ export default function Dashboard() {
 
           {todayTasks.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              Задач нет — заслуженный отдых 🎉
+              {t.dashboard.noTasks}
             </p>
           ) : (
             <div className="space-y-1">
@@ -382,18 +380,18 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Track progress — compact single-line per track */}
+        {/* Track progress */}
         <div
           className="rounded-2xl p-5 self-start"
           style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Прогресс</h2>
+            <h2 className="font-semibold text-foreground">{t.dashboard.progress}</h2>
             <Link
               href="/stats"
               className="flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              Все треки
+              {t.dashboard.allTracks}
               <ChevronRight size={12} />
             </Link>
           </div>
@@ -401,8 +399,8 @@ export default function Dashboard() {
           {trackEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 gap-2 text-center">
               <span className="text-2xl">📊</span>
-              <p className="text-sm text-muted-foreground">Пока нет активностей с XP</p>
-              <Link href="/pool" className="text-xs text-primary hover:underline">Добавить активности →</Link>
+              <p className="text-sm text-muted-foreground">{t.dashboard.noActivities}</p>
+              <Link href="/pool" className="text-xs text-primary hover:underline">{t.dashboard.addActivities}</Link>
             </div>
           ) : (
             <div className="space-y-3">

@@ -168,7 +168,7 @@ export const useStore = create<Store>()((set, get) => ({
       templateTasks: [],
       scheduleSettings: DEFAULT_SCHEDULE_SETTINGS,
 
-      setUserName: (name) => set({ userName: name.trim() || 'Пользователь' }),
+      setUserName: (name) => set({ userName: name.trim() || 'User' }),
       setPassword: (password) => {
         if (typeof window !== 'undefined') {
           if (password) localStorage.setItem(STORED_PASSWORD_KEY, password)

@@ -1,12 +1,16 @@
 'use client'
 
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
+import { uk as ukLocale } from 'date-fns/locale'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Brain, CalendarDays, Trash2 } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { useT } from '@/lib/i18n'
 
 export default function JournalProfilesPage() {
+  const { t, lang } = useT()
+  const dateLocale = lang === 'uk' ? ukLocale : enUS
   const { journalProfiles, deleteJournalProfile } = useStore()
   const router = useRouter()
 
@@ -24,8 +28,8 @@ export default function JournalProfilesPage() {
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-white">Психологические заметки</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Портреты по месяцам от ИИ-психолога</p>
+          <h1 className="text-2xl font-bold text-white">{t.journalProfiles.title}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t.journalProfiles.subtitle}</p>
         </div>
       </div>
 
@@ -36,17 +40,17 @@ export default function JournalProfilesPage() {
         >
           <Brain size={32} style={{ color: '#818cf8', opacity: 0.5 }} />
           <div>
-            <p className="font-semibold text-white/70">Заметок пока нет</p>
+            <p className="font-semibold text-white/70">{t.journalProfiles.empty}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Пиши в дневник, затем нажми «Обновить базу» — ИИ создаст психологический портрет за месяц
+              {t.journalProfiles.emptyHint}
             </p>
           </div>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {months.map(([month, profile]) => {
-            const monthLabel = format(new Date(month + '-01'), 'LLLL yyyy', { locale: ru })
-            const updatedLabel = format(new Date(profile.updatedAt), 'd MMM yyyy, HH:mm', { locale: ru })
+            const monthLabel = format(new Date(month + '-01'), 'LLLL yyyy', { locale: dateLocale })
+            const updatedLabel = format(new Date(profile.updatedAt), 'd MMM yyyy, HH:mm', { locale: dateLocale })
             return (
               <div
                 key={month}
@@ -59,12 +63,12 @@ export default function JournalProfilesPage() {
                     <span className="font-semibold text-white capitalize">{monthLabel}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-white/25">обновлено {updatedLabel}</span>
+                    <span className="text-xs text-white/25">{t.journalProfiles.updated(updatedLabel)}</span>
                     <button
                       onClick={() => deleteJournalProfile(month)}
                       className="flex items-center justify-center rounded-lg p-1.5 opacity-40 hover:opacity-100 transition-opacity"
                       style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }}
-                      title="Удалить заметку"
+                      title={t.journalProfiles.deleteNote}
                     >
                       <Trash2 size={13} />
                     </button>

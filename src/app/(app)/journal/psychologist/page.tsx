@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
+import { uk as ukLocale } from 'date-fns/locale'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Send, Loader2, Brain, User } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { ApiKeySetup } from '@/components/ApiKeySetup'
 import type { DayJob } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 
 function parseInline(text: string): React.ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/)
@@ -42,11 +44,9 @@ function renderMessage(content: string): React.ReactNode {
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
-const WELCOME = `Привет. Я здесь чтобы слушать — без осуждения и спешки.
-
-О чём хочешь поговорить сегодня?`
-
 export default function PsychologistPage() {
+  const { t, lang } = useT()
+  const dateLocale = lang === 'uk' ? ukLocale : enUS
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -61,12 +61,12 @@ export default function PsychologistPage() {
 
   const buildContext = () => {
     const today = format(new Date(), 'yyyy-MM-dd')
-    const dayOfWeek = format(new Date(), 'EEEE', { locale: ru })
+    const dayOfWeek = format(new Date(), 'EEEE', { locale: dateLocale })
     const recentJournal = [...journalEntries]
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 14)
-    const todayTasks = tasks.filter(t => t.date === today)
-    const upcomingTasks = tasks.filter(t => t.date >= today && !t.completed).sort((a, b) => a.date.localeCompare(b.date))
+    const todayTasks = tasks.filter(tk => tk.date === today)
+    const upcomingTasks = tasks.filter(tk => tk.date >= today && !tk.completed).sort((a, b) => a.date.localeCompare(b.date))
     return {
       userName, today, dayOfWeek, todayTasks, upcomingTasks,
       streak, trackXP, workDaysCount: workDays.length,
@@ -89,16 +89,16 @@ export default function PsychologistPage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages, context: buildContext(), apiKey, mode: 'psychologist' }),
+        body: JSON.stringify({ messages: newMessages, context: buildContext(), apiKey, mode: 'psychologist', lang }),
       })
       const data = await res.json()
       if (!res.ok) {
-        setMessages(m => [...m, { role: 'assistant', content: `⚠️ ${data.error || 'Ошибка'}` }])
+        setMessages(m => [...m, { role: 'assistant', content: `⚠️ ${data.error || 'Error'}` }])
         return
       }
       if (data.message) setMessages(m => [...m, { role: 'assistant', content: data.message }])
-    } catch (e) {
-      setMessages(m => [...m, { role: 'assistant', content: '❌ Ошибка сети' }])
+    } catch {
+      setMessages(m => [...m, { role: 'assistant', content: t.psychologist.networkError }])
     } finally {
       setLoading(false)
     }
@@ -126,22 +126,21 @@ export default function PsychologistPage() {
             <Brain size={16} className="text-primary" />
           </div>
           <div className="flex-1">
-            <h1 className="text-sm font-semibold text-foreground">Психолог</h1>
-            <p className="text-xs text-muted-foreground">Пространство для рефлексии и понимания себя</p>
+            <h1 className="text-sm font-semibold text-foreground">{t.psychologist.title}</h1>
+            <p className="text-xs text-muted-foreground">{t.psychologist.subtitle}</p>
           </div>
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
-        {/* Welcome */}
         {messages.length === 0 && (
           <div className="flex gap-3 justify-start">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 mt-1">
               <Brain size={14} className="text-primary" />
             </div>
             <div className="max-w-[80%] rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-2.5 text-sm leading-relaxed">
-              {renderMessage(WELCOME)}
+              {renderMessage(t.psychologist.welcome)}
             </div>
           </div>
         )}
@@ -188,7 +187,7 @@ export default function PsychologistPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Напиши что чувствуешь или что тебя беспокоит..."
+            placeholder={t.psychologist.placeholder}
             rows={1}
             className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
             style={{ maxHeight: '120px' }}

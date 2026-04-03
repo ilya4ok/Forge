@@ -7,15 +7,16 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 
-function translateError(msg: string): string {
-  if (msg.includes('Invalid login credentials')) return 'Неверный email или пароль'
-  if (msg.includes('Email not confirmed')) return 'Email не подтверждён — проверь почту'
-  if (msg.includes('Too many requests')) return 'Слишком много попыток, подожди немного'
-  if (msg.includes('User not found')) return 'Аккаунт с таким email не найден'
-  if (msg.includes('Error sending recovery email')) return 'Не удалось отправить письмо — превышен лимит или email не зарегистрирован'
-  if (msg.includes('rate limit')) return 'Превышен лимит отправки писем, попробуй через час'
-  if (msg.includes('For security purposes')) return 'Подожди немного перед следующей попыткой'
+function translateError(msg: string, errors: Record<string, string>): string {
+  if (msg.includes('Invalid login credentials')) return errors.invalidCredentials
+  if (msg.includes('Email not confirmed')) return errors.emailNotConfirmed
+  if (msg.includes('Too many requests')) return errors.tooManyRequests
+  if (msg.includes('User not found')) return errors.userNotFound
+  if (msg.includes('Error sending recovery email')) return errors.sendFailed
+  if (msg.includes('rate limit')) return errors.rateLimit
+  if (msg.includes('For security purposes')) return errors.waitBefore
   return msg
 }
 
@@ -23,6 +24,7 @@ const REMEMBER_KEY = 'forge-remember-email'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t } = useT()
   const [email, setEmail] = useState(() =>
     typeof window !== 'undefined' ? (localStorage.getItem(REMEMBER_KEY) ?? '') : ''
   )
@@ -47,7 +49,7 @@ export default function LoginPage() {
       router.push('/')
       router.refresh()
     } catch (e) {
-      setError(translateError(e instanceof Error ? e.message : 'Ошибка входа'))
+      setError(translateError(e instanceof Error ? e.message : t.login.errors.invalidCredentials, t.login.errors))
     } finally {
       setLoading(false)
     }
@@ -64,7 +66,7 @@ export default function LoginPage() {
       if (error) throw error
       setResetSent(true)
     } catch (e) {
-      setError(translateError(e instanceof Error ? e.message : 'Ошибка сброса пароля'))
+      setError(translateError(e instanceof Error ? e.message : t.login.errors.sendFailed, t.login.errors))
     } finally {
       setLoading(false)
     }
@@ -75,7 +77,7 @@ export default function LoginPage() {
       <img src="/forge-logo.svg" alt="Forge" className="h-14 w-14" />
       <div className="text-center">
         <h1 className="text-2xl font-bold text-white">Forge</h1>
-        <p className="text-sm text-white/40 mt-0.5">Куй себя каждый день</p>
+        <p className="text-sm text-white/40 mt-0.5">{t.tagline}</p>
       </div>
     </div>
   )
@@ -87,9 +89,9 @@ export default function LoginPage() {
           {logo}
           <div className="rounded-2xl p-6 text-center space-y-4" style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="text-4xl">📬</div>
-            <h2 className="text-base font-semibold text-white">Письмо отправлено</h2>
+            <h2 className="text-base font-semibold text-white">{t.login.emailSent}</h2>
             <p className="text-sm text-white/40">
-              Проверь почту <span className="text-white/70">{email}</span> и перейди по ссылке для сброса пароля.
+              {t.login.checkEmail(email)}
             </p>
             <a
               href="https://mail.google.com"
@@ -98,13 +100,13 @@ export default function LoginPage() {
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
             >
-              Открыть Gmail
+              {t.login.openGmail}
             </a>
             <button
               onClick={() => { setMode('login'); setResetSent(false) }}
               className="text-sm text-white/30 hover:text-white/60 transition-colors"
             >
-              Вернуться к входу
+              {t.login.backToLogin}
             </button>
           </div>
         </div>
@@ -121,7 +123,7 @@ export default function LoginPage() {
 
           {mode === 'login' ? (
             <>
-              <h2 className="text-base font-semibold text-white">Войти</h2>
+              <h2 className="text-base font-semibold text-white">{t.login.title}</h2>
               <form onSubmit={handleLogin} className="space-y-3">
                 <div className="relative">
                   <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
@@ -129,7 +131,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="Email"
+                    placeholder={t.login.email}
                     required
                     className="w-full rounded-xl pl-10 pr-4 py-3 text-sm text-white outline-none placeholder:text-white/25"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -141,7 +143,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="Пароль"
+                    placeholder={t.login.password}
                     required
                     className="w-full rounded-xl pl-10 pr-4 py-3 text-sm text-white outline-none placeholder:text-white/25"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -164,14 +166,14 @@ export default function LoginPage() {
                         </svg>
                       )}
                     </div>
-                    <span className="text-xs text-white/40">Запомнить меня</span>
+                    <span className="text-xs text-white/40">{t.login.rememberMe}</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => { setMode('reset'); setError(null) }}
                     className="text-xs text-white/30 hover:text-white/60 transition-colors"
                   >
-                    Забыли пароль?
+                    {t.login.forgotPassword}
                   </button>
                 </div>
 
@@ -188,7 +190,7 @@ export default function LoginPage() {
                   style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
                 >
                   {loading && <Loader2 size={15} className="animate-spin" />}
-                  {loading ? 'Вхожу...' : 'Войти'}
+                  {loading ? t.login.signingIn : t.login.signIn}
                 </button>
               </form>
             </>
@@ -201,9 +203,9 @@ export default function LoginPage() {
                 >
                   <ArrowLeft size={16} />
                 </button>
-                <h2 className="text-base font-semibold text-white">Восстановление пароля</h2>
+                <h2 className="text-base font-semibold text-white">{t.login.resetTitle}</h2>
               </div>
-              <p className="text-xs text-white/35">Введи свой email — мы пришлём ссылку для сброса пароля.</p>
+              <p className="text-xs text-white/35">{t.login.resetHint}</p>
               <form onSubmit={handleReset} className="space-y-3">
                 <div className="relative">
                   <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
@@ -211,7 +213,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="Email"
+                    placeholder={t.login.email}
                     required
                     autoFocus
                     className="w-full rounded-xl pl-10 pr-4 py-3 text-sm text-white outline-none placeholder:text-white/25"
@@ -232,7 +234,7 @@ export default function LoginPage() {
                   style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
                 >
                   {loading && <Loader2 size={15} className="animate-spin" />}
-                  {loading ? 'Отправляю...' : 'Отправить ссылку'}
+                  {loading ? t.login.sending : t.login.sendLink}
                 </button>
               </form>
             </>
@@ -240,9 +242,9 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-sm text-white/30 mt-4">
-          Нет аккаунта?{' '}
+          {t.login.noAccount}{' '}
           <Link href="/register" className="text-primary hover:opacity-80 transition-opacity">
-            Зарегистрироваться
+            {t.login.register}
           </Link>
         </p>
       </div>

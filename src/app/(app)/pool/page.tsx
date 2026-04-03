@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, Check, CalendarPlus, ChevronDown, ArrowLeft, X } 
 import { useStore } from '@/lib/store'
 import type { TemplateTask } from '@/lib/types'
 import { Portal } from '@/components/Portal'
+import { useT } from '@/lib/i18n'
 
 // ── Preset types (used inside card creation, not as standalone entities) ──────
 const PRESETS = [
@@ -55,6 +56,7 @@ type Preset = typeof PRESETS[number]
 
 // ── Add-to-date dropdown ───────────────────────────────────────────────────────
 function AddToDateButton({ onAdd, color }: { onAdd: (date: string) => void; color: string }) {
+  const { t } = useT()
   const [open, setOpen] = useState(false)
   const [customDate, setCustomDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const today = format(new Date(), 'yyyy-MM-dd')
@@ -66,10 +68,10 @@ function AddToDateButton({ onAdd, color }: { onAdd: (date: string) => void; colo
       className="w-56 rounded-2xl p-2 shadow-2xl"
       style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}
     >
-      <button onClick={() => add(today)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">Сегодня</button>
-      <button onClick={() => add(tomorrow)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">Завтра</button>
+      <button onClick={() => add(today)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">{t.common.today}</button>
+      <button onClick={() => add(tomorrow)} className="w-full rounded-xl px-4 py-2.5 text-left text-sm text-foreground hover:bg-white/5 transition-colors">{t.pool.tomorrow}</button>
       <div className="mt-1 border-t border-white/5 pt-2 px-2 pb-1 space-y-1.5">
-        <p className="text-xs text-muted-foreground px-1">Другая дата</p>
+        <p className="text-xs text-muted-foreground px-1">{t.pool.otherDate}</p>
         <input
           type="date" value={customDate}
           onChange={e => setCustomDate(e.target.value)}
@@ -81,7 +83,7 @@ function AddToDateButton({ onAdd, color }: { onAdd: (date: string) => void; colo
           className="w-full rounded-xl py-2 text-sm font-semibold text-white"
           style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
         >
-          Добавить
+          {t.common.add}
         </button>
       </div>
     </div>
@@ -95,7 +97,7 @@ function AddToDateButton({ onAdd, color }: { onAdd: (date: string) => void; colo
         style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
       >
         <CalendarPlus size={14} />
-        В расписание
+        {t.pool.toSchedule}
         <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -132,6 +134,7 @@ function TaskCardForm({
   onSave: (data: { title: string; emoji: string; durationMins: number; xp: number; weeklyFrequency: number; defaultTimeStart: string; preset: Preset }) => void
   onCancel: () => void
 }) {
+  const { t } = useT()
   const startPreset = PRESETS.find(p => p.key === (initial?.presetKey ?? initialPresetKey)) ?? null
   const [step, setStep] = useState<1 | 2>(startPreset ? 2 : 1)
   const [preset, setPreset] = useState<Preset | null>(startPreset)
@@ -146,7 +149,7 @@ function TaskCardForm({
   const [defaultTimeStart, setDefaultTimeStart] = useState(initial?.defaultTimeStart ?? '')
   const [durationMins, setDurationMins] = useState(initial?.durationMins && initial.durationMins > 0 ? initial.durationMins : 60)
 
-  const DIFFICULTY_LABELS = ['', 'Легко', 'Нормально', 'Сложно', 'Хардкор', 'Легенда']
+  const DIFFICULTY_LABELS = ['', ...t.schedule.difficulties]
   const DIFFICULTY_COEF =   [0,  0.75,   1.0,         1.25,    1.5,       2.0]
   const xp = Math.round(DIFFICULTY_COEF[difficulty] * 25)
 
@@ -166,7 +169,7 @@ function TaskCardForm({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-base font-semibold text-foreground">Выбери тип задачи</p>
+          <p className="text-base font-semibold text-foreground">{t.pool.chooseType}</p>
           <button onClick={onCancel} className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground transition-colors">
             <X size={16} />
           </button>
@@ -196,7 +199,7 @@ function TaskCardForm({
           onClick={() => setStep(1)}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft size={14} /> Назад
+          <ArrowLeft size={14} /> {t.pool.back}
         </button>
         <div
           className="flex items-center gap-2 rounded-xl px-3 py-1"
@@ -209,7 +212,7 @@ function TaskCardForm({
 
       {/* Emoji picker */}
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Иконка</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.pool.icon}</p>
         <div className="grid grid-cols-8 gap-1.5">
           {preset!.emojis.map(e => (
             <button
@@ -229,13 +232,13 @@ function TaskCardForm({
 
       {/* Title */}
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Название задачи</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.pool.taskName}</p>
         <input
           autoFocus
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel() }}
-          placeholder="Например: Утренняя пробежка"
+          placeholder={t.pool.taskNamePlaceholder}
           maxLength={60}
           className="w-full rounded-xl px-4 py-3 text-base text-foreground outline-none"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
@@ -245,9 +248,9 @@ function TaskCardForm({
       {/* Difficulty */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Сложность</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.pool.difficulty}</p>
           <span className="rounded-lg px-2.5 py-1 text-sm font-bold" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>
-            +{xp} <span className="font-normal opacity-50 text-xs">XP/ч</span>
+            +{xp} <span className="font-normal opacity-50 text-xs">XP/{t.common.hours}</span>
           </span>
         </div>
         <div className="flex gap-2">
@@ -273,7 +276,7 @@ function TaskCardForm({
       {/* Time + Duration */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Время начала</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.pool.startTime}</p>
           <input
             type="time"
             value={defaultTimeStart}
@@ -283,7 +286,7 @@ function TaskCardForm({
           />
         </div>
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Длительность</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.pool.duration}</p>
           <div className="grid grid-cols-3 gap-1">
             {[30, 45, 60, 90, 120, 150].map(m => (
               <button
@@ -296,7 +299,7 @@ function TaskCardForm({
                   color: durationMins === m ? preset!.color : 'rgba(255,255,255,0.35)',
                 }}
               >
-                {m < 60 ? `${m}м` : `${m / 60}ч`}
+                {m < 60 ? `${m}${t.common.minutes}` : `${m / 60}${t.common.hours}`}
               </button>
             ))}
           </div>
@@ -306,9 +309,9 @@ function TaskCardForm({
       {/* Weekly frequency */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Раз в неделю</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{t.pool.timesPerWeek}</p>
           <span className="text-sm font-semibold" style={{ color: preset!.color }}>
-            {weeklyFrequency === 7 ? 'каждый день' : `${weeklyFrequency}×`}
+            {t.pool.perWeek(weeklyFrequency)}
           </span>
         </div>
         <div className="flex gap-1.5">
@@ -336,14 +339,14 @@ function TaskCardForm({
           className="flex-1 rounded-xl py-3 text-base font-semibold text-white transition-opacity hover:opacity-90"
           style={{ background: `linear-gradient(135deg, ${preset!.color}, ${preset!.color}99)` }}
         >
-          Сохранить карточку
+          {t.pool.saveCard}
         </button>
         <button
           onClick={onCancel}
           className="rounded-xl px-5 py-3 text-base text-muted-foreground hover:text-foreground transition-colors"
           style={{ background: 'rgba(255,255,255,0.04)' }}
         >
-          Отмена
+          {t.pool.cancel}
         </button>
       </div>
     </div>
@@ -352,6 +355,7 @@ function TaskCardForm({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function PoolPage() {
+  const { t } = useT()
   const {
     categories, addCategory,
     templateTasks, addTemplateTask, updateTemplateTask, deleteTemplateTask,
@@ -420,9 +424,9 @@ export default function PoolPage() {
           <span style={{ display: 'inline-block', animation: 'wave 2s ease-in-out infinite', transformOrigin: '70% 70%' }}>👋</span>
         </div>
         <div className="flex flex-col items-center text-center">
-          <h2 className="text-3xl font-bold text-foreground">Добавь свои активности</h2>
+          <h2 className="text-3xl font-bold text-foreground">{t.pool.emptyTitle}</h2>
           <p className="mt-3 max-w-sm text-muted-foreground leading-relaxed">
-            Зал, учёба, языки — создай карточку раз, и добавляй в расписание одним кликом когда угодно.
+            {t.pool.emptyText}
           </p>
         </div>
         <button
@@ -430,7 +434,7 @@ export default function PoolPage() {
           className="flex items-center gap-2 rounded-2xl px-6 py-3 text-base font-semibold text-white transition-opacity hover:opacity-90"
           style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
         >
-          <Plus size={18} /> Создать карточку
+          <Plus size={18} /> {t.pool.createCard}
         </button>
       </div>
     )
@@ -477,18 +481,18 @@ export default function PoolPage() {
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Активности</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">Готовые карточки — добавляй в расписание одним кликом</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t.pool.title}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">{t.pool.subtitle}</p>
         </div>
         <button
           onClick={() => setCreating(true)}
           className="flex items-center justify-center rounded-xl transition-opacity hover:opacity-90 shrink-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm sm:font-semibold h-10 w-10 sm:h-auto sm:w-auto text-white"
           style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
-          title="Новая карточка"
+          title={t.pool.newCard}
         >
           <Plus size={20} className="sm:hidden" />
           <Plus size={16} className="hidden sm:block" />
-          <span className="hidden sm:inline font-semibold">Новая карточка</span>
+          <span className="hidden sm:inline font-semibold">{t.pool.newCard}</span>
         </button>
       </div>
 
@@ -550,7 +554,7 @@ export default function PoolPage() {
                       className="rounded-lg px-2.5 py-1 text-sm font-medium"
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
                     >
-                      {['', 'Легко', 'Нормально', 'Сложно', 'Хардкор', 'Легенда'][Math.round(tmpl.xp / 25)] ?? 'Нормально'}
+                      {(['', ...t.schedule.difficulties])[Math.round(tmpl.xp / 25)] ?? t.schedule.difficulties[1]}
                     </span>
                     <span
                       className="rounded-lg px-2.5 py-1 text-sm font-bold"
@@ -563,12 +567,12 @@ export default function PoolPage() {
                         className="rounded-lg px-2.5 py-1 text-sm font-medium"
                         style={{ background: `${color}15`, color }}
                       >
-                        {tmpl.weeklyFrequency === 7 ? 'каждый день' : `${tmpl.weeklyFrequency}× в нед.`}
+                        {t.pool.perWeek(tmpl.weeklyFrequency)}
                       </span>
                     )}
                     {tmpl.durationMins > 0 && (
                       <span className="rounded-lg px-2.5 py-1 text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>
-                        {tmpl.durationMins < 60 ? `${tmpl.durationMins}м` : `${tmpl.durationMins / 60}ч`}
+                        {tmpl.durationMins < 60 ? `${tmpl.durationMins}${t.common.minutes}` : `${tmpl.durationMins / 60}${t.common.hours}`}
                       </span>
                     )}
                     {tmpl.defaultTimeStart && (
@@ -583,7 +587,7 @@ export default function PoolPage() {
                       className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold"
                       style={{ background: `${color}20`, color }}
                     >
-                      <Check size={15} /> Добавлено в расписание!
+                      <Check size={15} /> {t.pool.addedToSchedule}
                     </div>
                   ) : (
                     <AddToDateButton color={color} onAdd={date => handleAddToDate(tmpl, date)} />

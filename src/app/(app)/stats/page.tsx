@@ -2,17 +2,21 @@
 
 import { useMemo } from 'react'
 import { format, subDays, parseISO } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
+import { uk as ukLocale } from 'date-fns/locale'
 import { Flame, Zap, CheckCircle2, Trophy, TrendingUp, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
 import { catColor, catLabel, catEmoji } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 
 const XP_PER_LEVEL = 200
-const RANK_NAMES = ['Новичок', 'Стажёр', 'Специалист', 'Профи', 'Эксперт', 'Мастер', 'Гуру', 'Легенда', 'Элита']
 const LEGACY_TRACKS = ['ai', 'design', 'selfdevelopment', 'mediabuy', 'english', 'polish', 'gym']
 
 export default function StatsPage() {
+  const { t, lang } = useT()
+  const dateLocale = lang === 'uk' ? ukLocale : enUS
+  const RANK_NAMES = t.profile.ranks
   const { tasks, trackXP, streak, dailyXP, achievements, categories } = useStore()
 
   const totalXP = Object.values(trackXP).reduce((a, b) => a + b, 0)
@@ -25,13 +29,13 @@ export default function StatsPage() {
   // All tracks with XP
   const allTrackIds = [...new Set([
     ...categories.map(c => c.id),
-    ...LEGACY_TRACKS.filter(t => (trackXP[t] || 0) > 0),
+    ...LEGACY_TRACKS.filter(tk => (trackXP[tk] || 0) > 0),
   ])]
   const seenLabels = new Set<string>()
   const trackEntries = allTrackIds
-    .map(t => [t, trackXP[t] || 0] as [string, number])
-    .filter(([t]) => {
-      const label = catLabel(t, categories)
+    .map(tk => [tk, trackXP[tk] || 0] as [string, number])
+    .filter(([tk]) => {
+      const label = catLabel(tk, categories)
       if (seenLabels.has(label)) return false
       seenLabels.add(label)
       return true
@@ -41,15 +45,14 @@ export default function StatsPage() {
   const maxXP = Math.max(...trackEntries.map(([, xp]) => xp), 1)
 
   // Task stats
-  const completedTasks = tasks.filter(t => t.completed && !t.skipped)
-  const skippedTasks = tasks.filter(t => t.skipped)
-  const totalTasks = tasks.filter(t => t.completed || t.skipped || (!t.completed && !t.skipped))
+  const completedTasks = tasks.filter(tk => tk.completed && !tk.skipped)
+  const skippedTasks = tasks.filter(tk => tk.skipped)
 
   // XP per track from completed tasks
   const tasksByTrack = useMemo(() => {
     const map: Record<string, number> = {}
-    completedTasks.forEach(t => {
-      map[t.track] = (map[t.track] || 0) + 1
+    completedTasks.forEach(tk => {
+      map[tk.track] = (map[tk.track] || 0) + 1
     })
     return map
   }, [completedTasks])
@@ -77,9 +80,9 @@ export default function StatsPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm">← Главная</Link>
+        <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm">← {t.stats.home}</Link>
         <span className="text-muted-foreground">/</span>
-        <span className="text-sm text-foreground font-medium">Статистика</span>
+        <span className="text-sm text-foreground font-medium">{t.stats.title}</span>
       </div>
 
       {/* Level card */}
@@ -90,10 +93,10 @@ export default function StatsPage() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">{rankName}</p>
-            <p className="text-2xl font-bold text-foreground">Уровень {level}</p>
+            <p className="text-2xl font-bold text-foreground">{t.common.level} {level}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground mb-0.5">Всего XP</p>
+            <p className="text-xs text-muted-foreground mb-0.5">{t.stats.totalXp}</p>
             <p className="text-2xl font-bold" style={{ color: '#818cf8' }}>{totalXP.toLocaleString()}</p>
           </div>
         </div>
@@ -103,16 +106,16 @@ export default function StatsPage() {
             style={{ width: `${levelProgress}%`, background: 'linear-gradient(90deg, #818cf8, #a78bfa)' }}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5">{xpInLevel} / {XP_PER_LEVEL} XP до уровня {level + 1}</p>
+        <p className="text-xs text-muted-foreground mt-1.5">{t.stats.xpToLevel(xpInLevel, XP_PER_LEVEL)}</p>
       </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { icon: Flame, label: 'Стрик', value: streak.current, sub: `рекорд ${streak.longest}`, color: '#f97316' },
-          { icon: CheckCircle2, label: 'Выполнено', value: completedTasks.length, sub: `пропущено ${skippedTasks.length}`, color: '#34d399' },
-          { icon: Calendar, label: 'Активных дней', value: activeDays, sub: 'за 30 дней', color: '#60a5fa' },
-          { icon: Trophy, label: 'Достижений', value: achievements.length, sub: 'получено', color: '#fbbf24' },
+          { icon: Flame, label: t.stats.quickStats.streak, value: streak.current, sub: t.stats.quickStats.record(streak.longest), color: '#f97316' },
+          { icon: CheckCircle2, label: t.stats.quickStats.completed, value: completedTasks.length, sub: t.stats.quickStats.skipped(skippedTasks.length), color: '#34d399' },
+          { icon: Calendar, label: t.stats.quickStats.activeDays, value: activeDays, sub: t.stats.quickStats.last30, color: '#60a5fa' },
+          { icon: Trophy, label: t.stats.quickStats.achievements, value: achievements.length, sub: t.stats.quickStats.earned, color: '#fbbf24' },
         ].map(({ icon: Icon, label, value, sub, color }) => (
           <div key={label} className="rounded-2xl p-4" style={{ background: '#0f0f1a', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Icon size={16} style={{ color }} className="mb-2" />
@@ -128,11 +131,11 @@ export default function StatsPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <TrendingUp size={16} style={{ color: '#818cf8' }} />
-            <h2 className="font-semibold text-foreground">XP за 30 дней</h2>
+            <h2 className="font-semibold text-foreground">{t.stats.xpChart}</h2>
           </div>
           {bestDay.xp > 0 && (
             <p className="text-xs text-muted-foreground">
-              Лучший день: <span className="text-foreground font-medium">+{bestDay.xp} XP</span>
+              {t.stats.bestDay(bestDay.xp)}
             </p>
           )}
         </div>
@@ -154,7 +157,7 @@ export default function StatsPage() {
                 <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 pointer-events-none">
                   <div className="rounded-lg px-2 py-1 text-xs whitespace-nowrap" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
                     <p className="text-foreground font-medium">+{xp} XP</p>
-                    <p className="text-muted-foreground">{format(parseISO(date), 'd MMM', { locale: ru })}</p>
+                    <p className="text-muted-foreground">{format(parseISO(date), 'd MMM', { locale: dateLocale })}</p>
                   </div>
                 </div>
               )}
@@ -162,8 +165,8 @@ export default function StatsPage() {
           ))}
         </div>
         <div className="flex justify-between mt-1">
-          <p className="text-xs text-muted-foreground">{format(subDays(new Date(), 29), 'd MMM', { locale: ru })}</p>
-          <p className="text-xs text-muted-foreground">Сегодня</p>
+          <p className="text-xs text-muted-foreground">{format(subDays(new Date(), 29), 'd MMM', { locale: dateLocale })}</p>
+          <p className="text-xs text-muted-foreground">{t.stats.today}</p>
         </div>
       </div>
 
@@ -171,13 +174,13 @@ export default function StatsPage() {
       <div className="rounded-2xl p-5" style={{ background: '#0f0f1a', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-2 mb-4">
           <Zap size={16} style={{ color: '#818cf8' }} />
-          <h2 className="font-semibold text-foreground">Все треки</h2>
+          <h2 className="font-semibold text-foreground">{t.stats.allTracks}</h2>
         </div>
 
         {trackEntries.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground text-sm">Пока нет XP ни в одном треке</p>
-            <Link href="/pool" className="text-xs text-primary hover:underline mt-2 block">Добавить активности →</Link>
+            <p className="text-muted-foreground text-sm">{t.stats.noXp}</p>
+            <Link href="/pool" className="text-xs text-primary hover:underline mt-2 block">{t.stats.addActivities}</Link>
           </div>
         ) : (
           <div className="space-y-4">
@@ -195,10 +198,10 @@ export default function StatsPage() {
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-foreground">{label}</span>
-                          {i === 0 && <span className="text-xs px-1.5 py-0.5 rounded-md font-semibold" style={{ background: `${color}20`, color }}>🏆 Лидер</span>}
+                          {i === 0 && <span className="text-xs px-1.5 py-0.5 rounded-md font-semibold" style={{ background: `${color}20`, color }}>{t.stats.leader}</span>}
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground">{count} задач</span>
+                          <span className="text-xs text-muted-foreground">{t.stats.taskCount(count)}</span>
                           <span className="text-sm font-bold tabular-nums" style={{ color }}>{xp} XP</span>
                         </div>
                       </div>

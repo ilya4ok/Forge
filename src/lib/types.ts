@@ -111,12 +111,12 @@ export const TRACK_COLORS: Record<string, string> = {
 
 export const TRACK_LABELS: Record<string, string> = {
   ai: 'AI',
-  design: 'Дизайн',
-  selfdevelopment: 'Саморазвитие',
-  mediabuy: 'Медиабаинг',
-  english: 'Английский',
-  polish: 'Польский',
-  gym: 'Зал',
+  design: 'Design',
+  selfdevelopment: 'Self-development',
+  mediabuy: 'Media buying',
+  english: 'English',
+  polish: 'Polish',
+  gym: 'Gym',
 }
 
 // ── Dynamic helpers — check user categories first, fall back to legacy ──

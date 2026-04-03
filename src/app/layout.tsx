@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/react'
 import Script from 'next/script'
+import { LanguageProvider } from '@/lib/i18n'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Forge',
-  description: 'Куй себя каждый день',
+  description: 'Forge yourself every day',
   icons: {
     icon: '/forge-logo.svg',
     apple: '/forge-logo.svg',
@@ -14,22 +15,24 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="en">
       <body>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-DZT1CCGPVQ"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-DZT1CCGPVQ');
-          `}
-        </Script>
-        {children}
-        <Analytics />
+        <LanguageProvider>
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-DZT1CCGPVQ"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-DZT1CCGPVQ');
+            `}
+          </Script>
+          {children}
+          <Analytics />
+        </LanguageProvider>
       </body>
     </html>
   )

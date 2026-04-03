@@ -80,7 +80,7 @@ timeStart и durationMins — из карточки пула (defaultTimeStart �
 - XP: ai=30, design=25, selfdevelopment=20, mediabuy=25, english=20, polish=30(1ч)/15(30мин), gym=15
 
 ПРАВИЛА — КАК ОТВЕЧАТЬ:
-- Всегда на русском
+- Respond in the language specified in CURRENT DATA (see "Response language")
 - Не начинай ответ с "Привет!" или дежурных фраз если разговор уже идёт
 - Если Илья просто делится — сначала прими, потом (если нужно) задай один точный вопрос или дай инсайт
 - Если Илья застрял или жалуется — не просто сочувствуй. Дай конкретный следующий шаг
@@ -121,11 +121,11 @@ const API_HISTORY_LIMIT = 40
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, context, apiKey: clientApiKey, mode } = await req.json()
+    const { messages, context, apiKey: clientApiKey, mode, lang } = await req.json()
     const isPsychologist = mode === 'psychologist'
 
     if (!clientApiKey) {
-      return NextResponse.json({ error: 'API ключ не найден. Добавь свой Anthropic API ключ в профиле.' }, { status: 400 })
+      return NextResponse.json({ error: 'API key not found. Add your Anthropic API key in the profile.' }, { status: 400 })
     }
 
     const client = new Anthropic({ apiKey: clientApiKey })
@@ -134,18 +134,18 @@ export async function POST(req: NextRequest) {
     const poolInfo = context.poolCards?.length > 0
       ? context.poolCards.map((c: PoolCard) => {
           const parts = [`[track:${c.track}] "${c.title}"`, c.categoryLabel, `${c.xp} XP`]
-          if (c.durationMins) parts.push(`${c.durationMins} мин`)
-          if (c.defaultTimeStart) parts.push(`старт ${c.defaultTimeStart}`)
-          if (c.weeklyFrequency) parts.push(`${c.weeklyFrequency}× в нед.`)
+          if (c.durationMins) parts.push(`${c.durationMins}min`)
+          if (c.defaultTimeStart) parts.push(`start ${c.defaultTimeStart}`)
+          if (c.weeklyFrequency) parts.push(`${c.weeklyFrequency}×/wk`)
           return `- ${parts.join(' | ')}`
         }).join('\n')
       : null
 
     const jobsInfo = context.dayJobs?.length > 0
       ? context.dayJobs.slice(0, 7).map((j: { date: string; start: string; end: string; label?: string }) =>
-          `- ${j.date}: ${j.start}–${j.end} (${j.label ?? 'Работа в маке'})`
+          `- ${j.date}: ${j.start}–${j.end} (${j.label ?? 'Work'})`
         ).join('\n')
-      : 'Не задано'
+      : 'Not set'
 
     const journalInfo = context.recentJournal?.length > 0
       ? context.recentJournal.map((e: { date: string; text: string }) =>
@@ -160,46 +160,49 @@ export async function POST(req: NextRequest) {
           .join('\n\n')
       : null
 
+    const responseLang = lang === 'uk' ? 'Ukrainian' : 'English'
+
     // Dynamic part — changes every request (current data, journal)
     const dynamicPrompt = `---
 ТЕКУЩИЕ ДАННЫЕ (обновляются при каждом запросе):
 
-Имя пользователя: ${context.userName}
-Сегодня: ${context.today} (${context.dayOfWeek})
+Response language: ${responseLang}
+User name: ${context.userName}
+Today: ${context.today} (${context.dayOfWeek})
 
-ЗАДАЧИ НА СЕГОДНЯ:
+TODAY'S TASKS:
 ${context.todayTasks.length > 0
   ? context.todayTasks.map((t: { id: string; title: string; track: string; completed: boolean; skipped: boolean; xp: number }) =>
     `- [id:${t.id}] [${t.completed ? '✓' : t.skipped ? 'skip' : ' '}] ${t.title} (${t.track}, ${t.xp} XP)`
   ).join('\n')
-  : 'Задач нет'}
+  : 'No tasks'}
 
-РАБОЧИЕ ЧАСЫ В МАКЕ (когда пользователь занят работой):
+WORK HOURS (when user is busy with work):
 ${jobsInfo}
 
-ПРОГРЕСС:
-- Стрик: ${context.streak.current} дней (рекорд: ${context.streak.longest})
-- Опыт: ${Object.entries(context.trackXP).map(([k, v]) => `${k}: ${v} XP`).join(', ')}
+PROGRESS:
+- Streak: ${context.streak.current} days (record: ${context.streak.longest})
+- XP: ${Object.entries(context.trackXP).map(([k, v]) => `${k}: ${v} XP`).join(', ')}
 
-БЛИЖАЙШИЕ УЧЕБНЫЕ ЗАДАЧИ:
+UPCOMING TASKS:
 ${context.upcomingTasks.slice(0, 7).map((t: { id: string; title: string; date: string; track: string }) =>
-  `- [id:${t.id}] ${t.date}: ${t.title} (${t.track})`).join('\n') || 'нет'}
+  `- [id:${t.id}] ${t.date}: ${t.title} (${t.track})`).join('\n') || 'none'}
 
-Учебных дней настроено: ${context.workDaysCount}
+Work days configured: ${context.workDaysCount}
 ${poolInfo ? `
-КАРТОЧКИ ИЗ ПУЛА (используй их для добавления задач):
-${poolInfo}` : 'АКТИВНОСТИ: пусто — попроси пользователя создать активности в разделе "Активности"'}
+POOL CARDS (use them to add tasks):
+${poolInfo}` : 'ACTIVITIES: empty — ask user to create activities in the "Activities" section'}
 ${profilesInfo ? `
-НАКОПЛЕННЫЕ ЗАМЕТКИ КОУЧА (анализ дневника по месяцам — обновляется вручную):
+ACCUMULATED COACH NOTES (journal analysis by month — updated manually):
 ---
 ${profilesInfo}
 ---` : ''}
 ${journalInfo ? `
-ПОСЛЕДНИЕ ЗАПИСИ ДНЕВНИКА (свежий контекст, последние 7 дней):
+RECENT JOURNAL ENTRIES (fresh context, last 7 days):
 ---
 ${journalInfo}
 ---
-Используй записи и заметки психолога вместе: заметки дают паттерны, записи — текущее состояние.` : ''}`
+Use entries and psychologist notes together: notes give patterns, entries give current state.` : ''}`
 
     // Limit history to last N messages to avoid token overflow on very long conversations
     const recentMessages = (messages as { role: string; content: string }[]).slice(-API_HISTORY_LIMIT)
@@ -227,7 +230,7 @@ ${journalInfo}
     const block = response.content?.[0]
     if (!block) {
       console.error('Empty API response:', response.stop_reason, response.usage)
-      return NextResponse.json({ error: `AI не вернул ответ (stop_reason: ${response.stop_reason})` }, { status: 500 })
+      return NextResponse.json({ error: `AI returned no response (stop_reason: ${response.stop_reason})` }, { status: 500 })
     }
     const raw = block.type === 'text' ? block.text : ''
     console.log('AI raw response (first 800):', raw.substring(0, 800))

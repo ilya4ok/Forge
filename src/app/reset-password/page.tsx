@@ -6,9 +6,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Loader2, Lock } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const { t } = useT()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,7 +19,6 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    // Supabase puts tokens in the URL hash: #access_token=...&type=recovery
     const hash = window.location.hash
     const params = new URLSearchParams(hash.replace('#', ''))
     const type = params.get('type')
@@ -25,24 +26,19 @@ export default function ResetPasswordPage() {
     const refreshToken = params.get('refresh_token')
 
     if (type === 'recovery' && accessToken && refreshToken) {
-      // Set the session from the URL tokens
       supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(() => {
         setReady(true)
       })
       return
     }
 
-    // Fallback: listen for event (if page was already loaded)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true)
     })
 
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true)
-      else {
-        // No session and no recovery token — go back to login
-        setTimeout(() => router.replace('/login'), 3000)
-      }
+      else setTimeout(() => router.replace('/login'), 3000)
     })
 
     return () => subscription.unsubscribe()
@@ -51,8 +47,8 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     setError(null)
-    if (password.length < 6) { setError('Пароль минимум 6 символов'); return }
-    if (password !== confirm) { setError('Пароли не совпадают'); return }
+    if (password.length < 6) { setError(t.resetPassword.errors.tooShort); return }
+    if (password !== confirm) { setError(t.resetPassword.errors.mismatch); return }
     setLoading(true)
     try {
       const { error } = await supabase.auth.updateUser({ password })
@@ -60,7 +56,7 @@ export default function ResetPasswordPage() {
       setDone(true)
       setTimeout(() => router.push('/'), 2000)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка сохранения пароля')
+      setError(e instanceof Error ? e.message : t.resetPassword.errors.tooShort)
     } finally {
       setLoading(false)
     }
@@ -71,7 +67,7 @@ export default function ResetPasswordPage() {
       <img src="/forge-logo.svg" alt="Forge" className="h-14 w-14" />
       <div className="text-center">
         <h1 className="text-2xl font-bold text-white">Forge</h1>
-        <p className="text-sm text-white/40 mt-0.5">Куй себя каждый день</p>
+        <p className="text-sm text-white/40 mt-0.5">{t.tagline}</p>
       </div>
     </div>
   )
@@ -83,8 +79,8 @@ export default function ResetPasswordPage() {
           {logo}
           <div className="rounded-2xl p-6 text-center space-y-3" style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="text-4xl">✅</div>
-            <h2 className="text-base font-semibold text-white">Пароль обновлён</h2>
-            <p className="text-sm text-white/40">Перенаправляю в приложение...</p>
+            <h2 className="text-base font-semibold text-white">{t.resetPassword.passwordUpdated}</h2>
+            <p className="text-sm text-white/40">{t.resetPassword.redirecting}</p>
           </div>
         </div>
       </div>
@@ -98,7 +94,7 @@ export default function ResetPasswordPage() {
           {logo}
           <div className="rounded-2xl p-6 text-center space-y-3" style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}>
             <Loader2 size={28} className="animate-spin text-primary mx-auto" />
-            <p className="text-sm text-white/40">Проверяю ссылку...</p>
+            <p className="text-sm text-white/40">{t.resetPassword.checking}</p>
           </div>
         </div>
       </div>
@@ -110,7 +106,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
         {logo}
         <div className="rounded-2xl p-6 space-y-4" style={{ background: '#0d0b18', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <h2 className="text-base font-semibold text-white">Новый пароль</h2>
+          <h2 className="text-base font-semibold text-white">{t.resetPassword.newPassword}</h2>
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="relative">
               <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
@@ -118,7 +114,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Новый пароль"
+                placeholder={t.resetPassword.newPassword}
                 required
                 autoFocus
                 className="w-full rounded-xl pl-10 pr-4 py-3 text-sm text-white outline-none placeholder:text-white/25"
@@ -131,7 +127,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
-                placeholder="Повтори пароль"
+                placeholder={t.resetPassword.repeatPassword}
                 required
                 className="w-full rounded-xl pl-10 pr-4 py-3 text-sm text-white outline-none placeholder:text-white/25"
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -151,7 +147,7 @@ export default function ResetPasswordPage() {
               style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
             >
               {loading && <Loader2 size={15} className="animate-spin" />}
-              {loading ? 'Сохраняю...' : 'Сохранить пароль'}
+              {loading ? t.resetPassword.saving : t.resetPassword.savePassword}
             </button>
           </form>
         </div>

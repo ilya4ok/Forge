@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
 import { Send, Loader2, Bot, User, CheckCircle2, Key } from 'lucide-react'
 import Link from 'next/link'
 import { playError, playClick } from '@/lib/sounds'
 import { useStore } from '@/lib/store'
 import { ApiKeySetup } from '@/components/ApiKeySetup'
 import type { Track, DayJob } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 
 function parseInline(text: string): React.ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/)
@@ -59,6 +60,7 @@ type Action =
 
 
 export default function ChatPage() {
+  const { t, lang } = useT()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [lastActions, setLastActions] = useState<string[]>([])
@@ -87,28 +89,28 @@ export default function ChatPage() {
       if (action.type === 'updateSchedule') {
         updateSchedule(action.month, action.workDays)
         setOnboardingDone()
-        done.push(`📅 Учебные дни на ${action.month} — ${action.workDays.length} дней`)
+        done.push(t.chat.actions.studyDays(action.month, action.workDays.length))
       } else if (action.type === 'setDayJobs') {
         setDayJobs(action.jobs)
         setOnboardingDone()
-        done.push(`🖥 Рабочие часы сохранены для ${action.jobs.length} дней`)
+        done.push(t.chat.actions.workHours(action.jobs.length))
       } else if (action.type === 'addTask') {
         addTask({ title: action.title, track: action.track, date: action.date, xp: action.xp, isRecurring: false })
-        done.push(`✅ Задача добавлена: ${action.title}`)
+        done.push(t.chat.actions.taskAdded(action.title))
       } else if (action.type === 'completeTask') {
         completeTask(action.taskId)
         const task = tasks.find(t => t.id === action.taskId)
-        done.push(`⚡ Выполнено: ${task?.title ?? action.taskId}`)
+        done.push(t.chat.actions.taskDone(task?.title ?? action.taskId))
       } else if (action.type === 'uncompleteTask') {
         uncompleteTask(action.taskId)
-        const task = tasks.find(t => t.id === action.taskId)
-        done.push(`↩ Отменено выполнение: ${task?.title ?? action.taskId}`)
+        const task = tasks.find(tk => tk.id === action.taskId)
+        done.push(t.chat.actions.taskUndone(task?.title ?? action.taskId))
       } else if (action.type === 'skipTask') {
         skipTask(action.taskId)
-        const task = tasks.find(t => t.id === action.taskId)
-        done.push(`⏭ Пропущено: ${task?.title ?? action.taskId}`)
+        const task = tasks.find(tk => tk.id === action.taskId)
+        done.push(t.chat.actions.taskSkipped(task?.title ?? action.taskId))
       } else if (action.type === 'resetData') {
-        done.push('🗑 Данные сброшены — перезагрузка...')
+        done.push(t.chat.actions.dataReset)
         setTimeout(() => {
           localStorage.removeItem('personal-dashboard-storage')
           window.location.reload()
@@ -120,7 +122,7 @@ export default function ChatPage() {
 
   const buildContext = () => {
     const today = format(new Date(), 'yyyy-MM-dd')
-    const dayOfWeek = format(new Date(), 'EEEE', { locale: ru })
+    const dayOfWeek = format(new Date(), 'EEEE', { locale: enUS })
     const todayTasks = tasks.filter(t => t.date === today)
     const upcomingTasks = tasks
       .filter(t => t.date >= today && !t.completed)
@@ -153,13 +155,13 @@ export default function ChatPage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, context: buildContext(), apiKey }),
+        body: JSON.stringify({ messages, context: buildContext(), apiKey, lang }),
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        const errorMsg = data.error || 'Ошибка сервера. Проверь API ключ и интернет.'
+        const errorMsg = data.error || t.chat.actions.serverError
         addChatMessage({ role: 'assistant', content: `⚠️ ${errorMsg}` })
         return
       }
@@ -167,8 +169,8 @@ export default function ChatPage() {
       if (data.message) addChatMessage({ role: 'assistant', content: data.message })
       if (data.actions?.length > 0) executeActions(data.actions)
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка'
-      addChatMessage({ role: 'assistant', content: `❌ Ошибка сети: ${errorMsg}` })
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      addChatMessage({ role: 'assistant', content: t.chat.actions.networkError(errorMsg) })
     } finally {
       setLoading(false)
     }
@@ -190,10 +192,10 @@ export default function ChatPage() {
             <Bot size={16} className="text-primary" />
           </div>
           <div className="flex-1">
-            <h1 className="text-sm font-semibold text-foreground">Помощник</h1>
-            <p className="text-xs text-muted-foreground">Составляет расписание и управляет задачами</p>
+            <h1 className="text-sm font-semibold text-foreground">{t.chat.title}</h1>
+            <p className="text-xs text-muted-foreground">{t.chat.subtitle}</p>
           </div>
-          <Link href="/profile" className="flex h-8 w-8 items-center justify-center rounded-xl hover:bg-white/5 transition-colors" title="Профиль">
+          <Link href="/profile" className="flex h-8 w-8 items-center justify-center rounded-xl hover:bg-white/5 transition-colors" title={t.nav.profile}>
             <Key size={15} className="text-muted-foreground" />
           </Link>
         </div>
@@ -205,18 +207,13 @@ export default function ChatPage() {
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
             <div className="text-4xl">🤖</div>
             <div>
-              <p className="font-medium text-foreground">Привет, {userName}!</p>
+              <p className="font-medium text-foreground">{t.chat.welcome(userName)}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Составлю расписание, добавлю задачи, отмечу выполненное.<br />
-                Просто напиши — и я всё сделаю сам.
+                {t.chat.welcomeText}
               </p>
             </div>
             <div className="grid grid-cols-1 gap-2 w-full max-w-sm">
-              {[
-                'Составь расписание на апрель',
-                'Какие задачи на сегодня?',
-                'Что мне сделать на этой неделе?',
-              ].map(s => (
+              {t.chat.suggestions.map(s => (
                 <button
                   key={s}
                   onClick={() => setInput(s)}
@@ -285,7 +282,7 @@ export default function ChatPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Напиши сообщение..."
+            placeholder={t.chat.placeholder}
             rows={1}
             className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors overflow-y-auto"
             style={{ maxHeight: '80px' }}

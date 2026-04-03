@@ -6,12 +6,14 @@ import { useStore } from '@/lib/store'
 import { signOut } from '@/lib/sync'
 import { supabase } from '@/lib/supabase'
 import { CheckCircle2, Pencil, X, Lock, Camera, AlertTriangle, Eye, EyeOff, LogOut } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 
-const RANK_NAMES = ['Новичок', 'Стажёр', 'Специалист', 'Профи', 'Эксперт', 'Мастер', 'Гуру', 'Легенда', 'Элита']
 const XP_PER_LEVEL = 200
 
 
 export default function ProfilePage() {
+  const { t } = useT()
+  const RANK_NAMES = t.profile.ranks
   const router = useRouter()
   const {
     userName, setUserName,
@@ -61,8 +63,8 @@ export default function ProfilePage() {
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault()
     setPwError('')
-    if (newPw.length < 6) { setPwError('Минимум 6 символов'); return }
-    if (newPw !== confirmPw) { setPwError('Пароли не совпадают'); return }
+    if (newPw.length < 6) { setPwError(t.profile.minChars); return }
+    if (newPw !== confirmPw) { setPwError(t.profile.passwordMismatch); return }
     setPwLoading(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: newPw })
@@ -71,7 +73,7 @@ export default function ProfilePage() {
       setPwSaved(true)
       setTimeout(() => setPwSaved(false), 2500)
     } catch (e) {
-      setPwError(e instanceof Error ? e.message : 'Ошибка смены пароля')
+      setPwError(e instanceof Error ? e.message : 'Password change error')
     } finally {
       setPwLoading(false)
     }
@@ -93,7 +95,7 @@ export default function ProfilePage() {
   return (
     <div className="p-6 space-y-5">
 
-      <h1 className="text-2xl font-bold text-foreground">Профиль</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t.profile.title}</h1>
 
       {/* Avatar + Name — full width */}
       <div
@@ -115,7 +117,7 @@ export default function ProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-white shadow-lg transition-opacity hover:opacity-80"
             style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
-            title="Загрузить фото"
+            title={t.profile.uploadPhoto}
           >
             <Camera size={13} />
           </button>
@@ -135,7 +137,7 @@ export default function ProfilePage() {
                   if (e.key === 'Escape') { setDraftName(userName); setEditingName(false) }
                 }}
                 maxLength={20}
-                placeholder="Твоё имя"
+                placeholder={t.profile.yourName}
                 className="flex-1 min-w-0 rounded-xl px-3 py-2 text-lg font-semibold text-foreground outline-none"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(129,140,248,0.4)' }}
               />
@@ -160,14 +162,14 @@ export default function ProfilePage() {
               </button>
               {nameSaved && (
                 <span className="flex items-center gap-1 text-xs font-medium text-green-400">
-                  <CheckCircle2 size={12} /> Сохранено
+                  <CheckCircle2 size={12} /> {t.common.saved}
                 </span>
               )}
             </div>
           )}
           {avatarUrl && (
             <button onClick={() => setAvatarUrl('')} className="mt-2 text-xs text-muted-foreground hover:text-red-400 transition-colors">
-              Удалить фото
+              {t.profile.deletePhoto}
             </button>
           )}
         </div>
@@ -187,10 +189,10 @@ export default function ProfilePage() {
       {/* Stats — 4 cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: 'Всего XP', value: totalXP, color: '#818cf8', bg: 'linear-gradient(135deg, #0d0d1c, #08080f)', glow: 'rgba(129,140,248,0.12)' },
-          { label: 'Уровень', value: `${level} · ${rankName}`, color: '#a78bfa', bg: 'linear-gradient(135deg, #100f1e, #090810)', glow: 'rgba(167,139,250,0.12)' },
-          { label: 'Стрик', value: `${streak.current} дн.`, color: '#fb923c', bg: 'linear-gradient(135deg, #1c0e08, #130b06)', glow: 'rgba(251,146,60,0.12)' },
-          { label: 'Задач выполнено', value: completedTasks, color: '#34d399', bg: 'linear-gradient(135deg, #0a1812, #060f0c)', glow: 'rgba(52,211,153,0.12)' },
+          { label: t.profile.totalXp, value: totalXP, color: '#818cf8', bg: 'linear-gradient(135deg, #0d0d1c, #08080f)', glow: 'rgba(129,140,248,0.12)' },
+          { label: t.profile.level, value: `${level} · ${rankName}`, color: '#a78bfa', bg: 'linear-gradient(135deg, #100f1e, #090810)', glow: 'rgba(167,139,250,0.12)' },
+          { label: t.profile.streak, value: `${streak.current} ${t.common.days}`, color: '#fb923c', bg: 'linear-gradient(135deg, #1c0e08, #130b06)', glow: 'rgba(251,146,60,0.12)' },
+          { label: t.profile.tasksDone, value: completedTasks, color: '#34d399', bg: 'linear-gradient(135deg, #0a1812, #060f0c)', glow: 'rgba(52,211,153,0.12)' },
         ].map(({ label, value, color, bg, glow }) => (
           <div
             key={label}
@@ -209,7 +211,7 @@ export default function ProfilePage() {
         style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-semibold text-foreground">{rankName} · ур. {level}</span>
+          <span className="text-sm font-semibold text-foreground">{rankName} · lv. {level}</span>
           <span className="text-xs text-muted-foreground tabular-nums">{xpInLevel} / {XP_PER_LEVEL} XP</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
@@ -219,7 +221,7 @@ export default function ProfilePage() {
           />
         </div>
         <p className="mt-1.5 text-[11px] text-right" style={{ color: 'rgba(255,255,255,0.2)' }}>
-          ещё {XP_PER_LEVEL - xpInLevel} XP до уровня {level + 1}
+          {t.profile.xpToLevel(XP_PER_LEVEL - xpInLevel, level + 1)}
         </p>
       </div>
 
@@ -233,18 +235,18 @@ export default function ProfilePage() {
         >
           <div className="flex items-center gap-2 mb-4">
             <Lock size={15} className="text-primary" />
-            <h2 className="font-semibold text-foreground">Сменить пароль</h2>
+            <h2 className="font-semibold text-foreground">{t.profile.changePassword}</h2>
           </div>
 
           {pwSaved ? (
             <div className="flex items-center gap-2 py-4 text-green-400 text-sm font-medium">
-              <CheckCircle2 size={16} /> Пароль успешно изменён
+              <CheckCircle2 size={16} /> {t.profile.passwordChanged}
             </div>
           ) : (
             <form onSubmit={handlePasswordChange} className="space-y-3">
               {[
-                { label: 'Новый пароль', value: newPw, setter: setNewPw },
-                { label: 'Повтори новый', value: confirmPw, setter: setConfirmPw },
+                { label: t.profile.newPassword, value: newPw, setter: setNewPw },
+                { label: t.profile.repeatPassword, value: confirmPw, setter: setConfirmPw },
               ].map(({ label, value, setter }, i) => (
                 <div key={i} className="relative">
                   <input
@@ -268,7 +270,7 @@ export default function ProfilePage() {
                 className="w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)' }}
               >
-                {pwLoading ? 'Сохраняю...' : 'Изменить пароль'}
+                {pwLoading ? t.common.saving : t.profile.changePasswordBtn}
               </button>
             </form>
           )}
@@ -281,15 +283,15 @@ export default function ProfilePage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-foreground">Обнулить данные</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Удалит все задачи, XP, стрик и настройки</p>
+              <h2 className="font-semibold text-foreground">{t.profile.resetData}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.profile.resetDataHint}</p>
             </div>
             <button
               onClick={() => setShowReset(v => !v)}
               className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold"
               style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}
             >
-              {showReset ? 'Отмена' : 'Сбросить'}
+              {showReset ? t.common.cancel : t.profile.resetBtn}
             </button>
           </div>
 
@@ -300,14 +302,14 @@ export default function ProfilePage() {
             >
               <AlertTriangle size={16} className="shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">Это необратимо</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Все данные удалятся без восстановления.</p>
+                <p className="text-sm font-semibold text-foreground">{t.profile.irreversible}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t.profile.irreversibleText}</p>
                 <button
                   onClick={handleReset}
                   className="mt-3 w-full rounded-lg py-2 text-xs font-semibold"
                   style={{ background: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
                 >
-                  Да, удалить всё
+                  {t.profile.confirmDelete}
                 </button>
               </div>
             </div>
@@ -315,7 +317,7 @@ export default function ProfilePage() {
         </div>
         {/* API Key */}
       <div className="rounded-2xl p-6 space-y-4" style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}>
-        <h2 className="text-base font-semibold text-foreground">API ключ помощника</h2>
+        <h2 className="text-base font-semibold text-foreground">{t.profile.apiKey}</h2>
         <input
           type="password"
           value={draftApiKey}
@@ -324,26 +326,26 @@ export default function ProfilePage() {
           className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
         />
-        {apiKey && <p className="text-xs text-muted-foreground">Ключ сохранён: {apiKey.slice(0, 12)}…</p>}
+        {apiKey && <p className="text-xs text-muted-foreground">{t.profile.apiKeySaved(apiKey.slice(0, 12))}</p>}
         <button
           onClick={() => { setApiKey(draftApiKey.trim()); setApiKeySaved(true); setTimeout(() => setApiKeySaved(false), 2000) }}
           disabled={!draftApiKey.trim() || draftApiKey.trim() === apiKey}
           className="w-full rounded-xl py-2.5 text-sm font-semibold transition-all disabled:opacity-40"
           style={{ background: apiKeySaved ? 'rgba(52,211,153,0.15)' : 'rgba(129,140,248,0.15)', color: apiKeySaved ? '#34d399' : '#818cf8', border: `1px solid ${apiKeySaved ? 'rgba(52,211,153,0.3)' : 'rgba(129,140,248,0.3)'}` }}
         >
-          {apiKeySaved ? 'Сохранено ✓' : 'Сохранить'}
+          {apiKeySaved ? t.common.savedCheck : t.common.save}
         </button>
       </div>
 
         {/* Schedule Settings */}
       <div className="rounded-2xl p-6 space-y-4" style={{ background: '#0f0f1a', boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset' }}>
-        <h2 className="text-base font-semibold text-foreground">Настройки расписания</h2>
+        <h2 className="text-base font-semibold text-foreground">{t.profile.scheduleSettings}</h2>
         <div className="space-y-3">
           {[
-            { label: 'Время подъёма', type: 'time', value: scheduleSettings.wakeTime, onChange: (v: string) => setScheduleSettings({ wakeTime: v }), extra: { colorScheme: 'dark' } },
-            { label: 'Утренняя подготовка (мин)', type: 'number', value: String(scheduleSettings.prepMin), onChange: (v: string) => setScheduleSettings({ prepMin: Number(v) }), min: 0, max: 240 },
-            { label: 'Дорога до работы (мин)', type: 'number', value: String(scheduleSettings.commuteToWorkMin), onChange: (v: string) => setScheduleSettings({ commuteToWorkMin: Number(v) }), min: 0, max: 240 },
-            { label: 'Буфер перед выездом (мин)', type: 'number', value: String(scheduleSettings.departBufMin), onChange: (v: string) => setScheduleSettings({ departBufMin: Number(v) }), min: 0, max: 60 },
+            { label: t.profile.wakeUpTime, type: 'time', value: scheduleSettings.wakeTime, onChange: (v: string) => setScheduleSettings({ wakeTime: v }), extra: { colorScheme: 'dark' } },
+            { label: t.profile.morningPrep, type: 'number', value: String(scheduleSettings.prepMin), onChange: (v: string) => setScheduleSettings({ prepMin: Number(v) }), min: 0, max: 240 },
+            { label: t.profile.commuteTime, type: 'number', value: String(scheduleSettings.commuteToWorkMin), onChange: (v: string) => setScheduleSettings({ commuteToWorkMin: Number(v) }), min: 0, max: 240 },
+            { label: t.profile.bufferBefore, type: 'number', value: String(scheduleSettings.departBufMin), onChange: (v: string) => setScheduleSettings({ departBufMin: Number(v) }), min: 0, max: 60 },
           ].map(({ label, type, value, onChange, ...rest }) => (
             <div key={label}>
               <label className="text-xs text-muted-foreground mb-1.5 block">{label}</label>
@@ -358,7 +360,7 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">Используется для расчёта времени выезда на работу</p>
+        <p className="text-xs text-muted-foreground">{t.profile.bufferHint}</p>
       </div>
 
       {/* Sign out */}
@@ -368,7 +370,7 @@ export default function ProfilePage() {
         style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171' }}
       >
         <LogOut size={16} />
-        Выйти из аккаунта
+        {t.profile.signOut}
       </button>
 
     </div>
