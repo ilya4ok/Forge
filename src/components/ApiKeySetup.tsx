@@ -18,7 +18,7 @@ function FAQ({ question, children }: { question: string; children: React.ReactNo
         {open ? <ChevronUp size={13} className="shrink-0 text-muted-foreground" /> : <ChevronDown size={13} className="shrink-0 text-muted-foreground" />}
       </button>
       {open && (
-        <div className="pb-3 text-xs text-muted-foreground leading-relaxed space-y-1">
+        <div className="pb-3 text-xs text-muted-foreground leading-relaxed space-y-1.5">
           {children}
         </div>
       )}
@@ -34,44 +34,91 @@ export function ApiKeySetup({ onSave }: { onSave: (key: string) => void }) {
 
   const isValid = value.trim().startsWith('sk-')
 
-  const steps = isUk ? [
-    { title: 'Зареєструйся на Anthropic', desc: 'Sign up або Log in' },
-    { title: 'Billing → Add credit → $5', desc: 'Без балансу ключ не працює' },
-    { title: 'API Keys → Create Key', desc: 'Дай будь-яку назву, наприклад "Forge"' },
-    { title: 'Скопіюй ключ одразу', desc: 'Він показується лише один раз' },
-  ] : [
-    { title: 'Sign up on Anthropic', desc: 'Sign up or Log in' },
-    { title: 'Billing → Add credit → $5', desc: 'Key won\'t work without balance' },
-    { title: 'API Keys → Create Key', desc: 'Give it any name, e.g. "Forge"' },
-    { title: 'Copy the key immediately', desc: 'It\'s shown only once' },
-  ]
-
   return (
     <div className="flex h-full flex-col overflow-y-auto">
-      <div className="max-w-md mx-auto w-full px-5 py-8 space-y-6">
+      <div className="max-w-md mx-auto w-full px-5 py-6 space-y-4">
 
         {/* Header */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(167,139,250,0.1))', boxShadow: '0 0 0 1px rgba(129,140,248,0.2) inset' }}>
-            <Key size={20} style={{ color: '#818cf8' }} />
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(167,139,250,0.1))', boxShadow: '0 0 0 1px rgba(129,140,248,0.2) inset' }}>
+            <Key size={18} style={{ color: '#818cf8' }} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground">
-              {isUk ? 'Потрібен API ключ' : 'API Key Required'}
+            <h2 className="text-base font-bold text-foreground">
+              {isUk ? 'Потрібен API ключ Anthropic' : 'Anthropic API Key Required'}
             </h2>
-            <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {isUk
-                ? 'Forge використовує Claude AI напряму через твій ключ — ми його не бачимо. Коштує ~$1–5/міс'
-                : 'Forge uses Claude AI directly via your key — we never see it. Costs ~$1–5/month'}
+                ? 'Персональний ключ доступу до Claude AI — ми його не бачимо'
+                : 'Personal access key to Claude AI — we never see it'}
             </p>
           </div>
         </div>
 
+        {/* What is it */}
+        <div className="rounded-xl p-3.5 space-y-2" style={{ background: 'rgba(129,140,248,0.07)', border: '1px solid rgba(129,140,248,0.15)' }}>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {isUk
+              ? 'API ключ — це пароль, який дозволяє Forge звертатись до Claude AI від твого імені. Ти реєструєшся на сайті Anthropic, поповнюєш баланс і отримуєш ключ. Всі запити йдуть напряму з твого браузера — ми його не зберігаємо на сервері.'
+              : 'An API key is a password that lets Forge talk to Claude AI on your behalf. You sign up on Anthropic\'s website, add credits, and get a key. All requests go directly from your browser — we don\'t store it on our servers.'}
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 size={11} style={{ color: '#34d399' }} />
+              <span className="text-xs" style={{ color: '#34d399' }}>
+                {isUk ? 'Зберігається тільки у тебе' : 'Stored only on your device'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 size={11} style={{ color: '#34d399' }} />
+              <span className="text-xs" style={{ color: '#34d399' }}>
+                {isUk ? '~$1–5 на місяць' : '~$1–5 per month'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Steps */}
-        <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="rounded-xl p-3.5 space-y-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <p className="text-xs font-semibold text-foreground/80">
+            {isUk ? '📋 Як отримати ключ' : '📋 How to get a key'}
+          </p>
+          <div className="space-y-2.5">
+            {(isUk ? [
+              { t: 'Відкрий сайт Anthropic', d: 'Натисни кнопку нижче → Sign up (або Log in якщо вже є акаунт)' },
+              { t: 'Поповни баланс — мінімум $5', d: 'Billing → Add credit. Без цього ключ не працює' },
+              { t: 'Створи API ключ', d: 'API Keys → Create Key → дай будь-яку назву, наприклад "Forge"' },
+              { t: 'Скопіюй ключ одразу', d: 'Він показується лише один раз — після закриття вікна не відновити' },
+            ] : [
+              { t: 'Open Anthropic website', d: 'Click the button below → Sign up (or Log in if you already have an account)' },
+              { t: 'Add credits — minimum $5', d: 'Billing → Add credit. Without this the key won\'t work' },
+              { t: 'Create an API key', d: 'API Keys → Create Key → give it any name, e.g. "Forge"' },
+              { t: 'Copy the key immediately', d: 'It\'s shown only once — can\'t be recovered after closing the dialog' },
+            ]).map((s, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold mt-0.5" style={{ background: 'rgba(129,140,248,0.15)', color: '#818cf8' }}>{i + 1}</span>
+                <div>
+                  <p className="text-xs font-medium text-foreground">{s.t}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg px-3 py-2 flex items-start gap-2" style={WARN_STYLE}>
+            <AlertCircle size={12} className="shrink-0 mt-0.5" style={{ color: '#fbbf24' }} />
+            <p className="text-xs leading-relaxed" style={{ color: '#fbbf24' }}>
+              {isUk
+                ? 'Найчастіша помилка — ключ є, але баланс не поповнено. Без $5 на рахунку нічого не працюватиме.'
+                : 'Most common mistake — key exists but no credits added. Without $5 balance nothing will work.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Input + console link */}
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-foreground/80">
-              {isUk ? 'Як отримати ключ' : 'How to get a key'}
+            <p className="text-xs text-muted-foreground">
+              {isUk ? 'Встав свій API ключ:' : 'Paste your API key:'}
             </p>
             <a
               href="https://console.anthropic.com/settings/keys"
@@ -81,35 +128,9 @@ export function ApiKeySetup({ onSave }: { onSave: (key: string) => void }) {
               style={{ color: '#818cf8' }}
             >
               <ExternalLink size={11} />
-              {isUk ? 'Відкрити консоль' : 'Open console'}
+              console.anthropic.com
             </a>
           </div>
-          <div className="space-y-2">
-            {steps.map((s, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold mt-0.5" style={{ background: 'rgba(129,140,248,0.15)', color: '#818cf8' }}>{i + 1}</span>
-                <div>
-                  <p className="text-xs font-medium text-foreground">{s.title}</p>
-                  <p className="text-xs text-muted-foreground">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-lg px-3 py-2 flex items-start gap-2 mt-1" style={WARN_STYLE}>
-            <AlertCircle size={12} className="shrink-0 mt-0.5" style={{ color: '#fbbf24' }} />
-            <p className="text-xs leading-relaxed" style={{ color: '#fbbf24' }}>
-              {isUk
-                ? 'Без поповнення балансу ($5) ключ не буде працювати — це найчастіша причина помилки'
-                : 'Without adding credits ($5) the key won\'t work — this is the most common error cause'}
-            </p>
-          </div>
-        </div>
-
-        {/* Input */}
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            {isUk ? 'Встав свій API ключ:' : 'Paste your API key:'}
-          </p>
           <div className="relative">
             <input
               type={show ? 'text' : 'password'}
@@ -151,24 +172,24 @@ export function ApiKeySetup({ onSave }: { onSave: (key: string) => void }) {
         </div>
 
         {/* FAQ */}
-        <div className="rounded-2xl px-4 py-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <FAQ question={isUk ? 'Ключ є, але бот пише помилку' : 'Key exists but bot returns an error'}>
-            <p>1. {isUk ? 'Перевір Billing — чи є кошти на рахунку?' : 'Check Billing — do you have credits?'}</p>
-            <p>2. {isUk ? 'Переконайся що скопіював ключ повністю (він довгий ~100 символів)' : 'Make sure you copied the full key (~100 characters long)'}</p>
-            <p>3. {isUk ? 'Спробуй створити новий ключ' : 'Try creating a new key'}</p>
+        <div className="rounded-xl px-4 py-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <FAQ question={isUk ? 'Ключ є, але бот пише помилку — що робити?' : 'Key exists but bot returns an error — what to do?'}>
+            <p>1. {isUk ? 'Чи поповнений баланс? Billing → перевір чи є кошти' : 'Is balance topped up? Billing → check if you have credits'}</p>
+            <p>2. {isUk ? 'Чи скопіював ключ повністю? Він довгий (~100 символів)' : 'Did you copy the full key? It\'s long (~100 characters)'}</p>
+            <p>3. {isUk ? 'Спробуй створити новий ключ — старий міг бути видалений' : 'Try creating a new key — the old one might have been deleted'}</p>
           </FAQ>
           <FAQ question={isUk ? 'Де знайти ключ якщо вже створював?' : 'Where to find a key I already created?'}>
             <p>
               {isUk
-                ? 'Anthropic не показує ключі повністю після створення. Якщо не зберіг — створи новий, це займе 30 секунд.'
-                : 'Anthropic doesn\'t show full keys after creation. If you didn\'t save it — create a new one, it takes 30 seconds.'}
+                ? 'Anthropic не показує ключі повністю після створення. Якщо не зберіг — створи новий, це займає 30 секунд і безкоштовно.'
+                : 'Anthropic doesn\'t show full keys after creation. If you didn\'t save it — create a new one, it takes 30 seconds and is free.'}
             </p>
           </FAQ>
-          <FAQ question={isUk ? 'Це безпечно?' : 'Is this safe?'}>
+          <FAQ question={isUk ? 'Скільки коштує використання?' : 'How much does it cost?'}>
             <p>
               {isUk
-                ? 'Ключ зберігається тільки в браузері і ніколи не потрапляє на наші сервери. Запити до Claude йдуть напряму від тебе.'
-                : 'The key is stored only in your browser and never reaches our servers. Requests to Claude go directly from you.'}
+                ? 'Одне повідомлення — приблизно $0.001–0.005 (менше копійки). При активному використанні (10–20 повідомлень на день) виходить $1–5 на місяць. Перші $5 вистачить на 1–3 місяці.'
+                : 'One message costs about $0.001–0.005. With active use (10–20 messages per day) it\'s $1–5/month. Your first $5 will last 1–3 months.'}
             </p>
           </FAQ>
         </div>
