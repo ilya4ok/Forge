@@ -379,9 +379,15 @@ export default function PoolPage() {
   function handleSave(data: { title: string; emoji: string; durationMins: number; xp: number; weeklyFrequency: number; defaultTimeStart: string; preset: Preset }) {
     const cat = resolveOrCreateCategory(data.preset)
     addTemplateTask({ title: data.title, categoryId: cat.id, durationMins: data.durationMins, xp: data.xp, weeklyFrequency: data.weeklyFrequency, defaultTimeStart: data.defaultTimeStart || undefined })
-    if (data.weeklyFrequency === 7) {
-      const today = format(new Date(), 'yyyy-MM-dd')
-      addTask({ title: data.title, track: cat.id, date: today, isRecurring: false, xp: data.xp, durationMins: data.durationMins, emoji: cat.emoji, timeStart: data.defaultTimeStart || undefined })
+    // Auto-schedule: distribute N occurrences evenly across next 7 days
+    const freq = Math.min(data.weeklyFrequency, 7)
+    const today = new Date()
+    for (let i = 0; i < freq; i++) {
+      const dayOffset = Math.round(i * 7 / freq)
+      const d = new Date(today)
+      d.setDate(today.getDate() + dayOffset)
+      const date = format(d, 'yyyy-MM-dd')
+      addTask({ title: data.title, track: cat.id, date, isRecurring: false, xp: data.xp, durationMins: data.durationMins, emoji: cat.emoji, timeStart: data.defaultTimeStart || undefined })
     }
     setCreating(false)
   }
