@@ -360,7 +360,7 @@ export default function PoolPage() {
   const {
     categories, addCategory,
     templateTasks, addTemplateTask, updateTemplateTask, deleteTemplateTask,
-    addTask,
+    addTask, patchTask,
   } = useStore()
 
   const [creating, setCreating] = useState(false)
@@ -378,7 +378,7 @@ export default function PoolPage() {
 
   function handleSave(data: { title: string; emoji: string; durationMins: number; xp: number; weeklyFrequency: number; defaultTimeStart: string; preset: Preset }) {
     const cat = resolveOrCreateCategory(data.preset)
-    addTemplateTask({ title: data.title, categoryId: cat.id, durationMins: data.durationMins, xp: data.xp, weeklyFrequency: data.weeklyFrequency, defaultTimeStart: data.defaultTimeStart || undefined })
+    addTemplateTask({ title: data.title, emoji: data.emoji, categoryId: cat.id, durationMins: data.durationMins, xp: data.xp, weeklyFrequency: data.weeklyFrequency, defaultTimeStart: data.defaultTimeStart || undefined })
     // Auto-schedule: distribute N occurrences evenly across next 7 days
     const freq = Math.min(data.weeklyFrequency, 7)
     const today = new Date()
@@ -477,7 +477,12 @@ export default function PoolPage() {
                 onSave={(data) => {
                   const c = resolveOrCreateCategory(data.preset)
                   if (editingId && modalTask) {
-                    updateTemplateTask(editingId, { title: data.title, categoryId: c.id, durationMins: data.durationMins, xp: data.xp })
+                    updateTemplateTask(editingId, { title: data.title, emoji: data.emoji, categoryId: c.id, durationMins: data.durationMins, xp: data.xp, weeklyFrequency: data.weeklyFrequency, defaultTimeStart: data.defaultTimeStart || undefined })
+                    // Sync future uncompleted schedule tasks that came from this template
+                    const today = format(new Date(), 'yyyy-MM-dd')
+                    useStore.getState().tasks
+                      .filter(t => t.track === modalTask.categoryId && t.title === modalTask.title && !t.completed && !t.skipped && t.date >= today)
+                      .forEach(t => patchTask(t.id, { title: data.title, emoji: data.emoji, track: c.id, xp: data.xp, durationMins: data.durationMins, timeStart: data.defaultTimeStart || undefined }))
                     setEditingId(null)
                   } else {
                     handleSave(data)
@@ -544,7 +549,7 @@ export default function PoolPage() {
 
                 {/* Emoji + type badge */}
                 <div className="flex items-start gap-3">
-                  <span className="text-4xl leading-none">{cat?.emoji ?? '📋'}</span>
+                  <span className="text-4xl leading-none">{tmpl.emoji ?? cat?.emoji ?? '📋'}</span>
                   {cat && (
                     <span
                       className="rounded-lg px-2 py-0.5 text-xs font-semibold"

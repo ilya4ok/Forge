@@ -132,6 +132,7 @@ type Store = AppState & {
   updateTaskDuration: (taskId: string, durationMins: number | undefined) => void
   updateTaskTitle: (taskId: string, title: string) => void
   moveTaskTo: (taskId: string, targetTaskId: string) => void
+  patchTask: (taskId: string, changes: Partial<Task>) => void
   addTask: (task: Omit<Task, 'id' | 'completed' | 'skipped'>) => void
   updateSchedule: (month: string, workDays: string[]) => void
   setDayJobs: (jobs: DayJob[]) => void
@@ -212,6 +213,9 @@ export const useStore = create<Store>()((set, get) => ({
       },
       deleteTemplateTask: (id) => {
         set(s => ({ templateTasks: s.templateTasks.filter(t => t.id !== id) }))
+      },
+      patchTask: (taskId: string, changes: Partial<Task>) => {
+        set(s => ({ tasks: s.tasks.map(t => t.id === taskId ? { ...t, ...changes } : t) }))
       },
 
       completeTask: (taskId) => {
