@@ -387,7 +387,7 @@ export default function PoolPage() {
       const d = new Date(today)
       d.setDate(today.getDate() + dayOffset)
       const date = format(d, 'yyyy-MM-dd')
-      addTask({ title: data.title, track: cat.id, date, isRecurring: false, xp: data.xp, durationMins: data.durationMins, emoji: cat.emoji, timeStart: data.defaultTimeStart || undefined })
+      addTask({ title: data.title, track: cat.id, date, isRecurring: false, xp: data.xp, durationMins: data.durationMins, emoji: data.emoji, timeStart: data.defaultTimeStart || undefined })
     }
     setCreating(false)
   }
@@ -395,7 +395,7 @@ export default function PoolPage() {
   function handleAddToDate(tmpl: TemplateTask, date: string) {
     const cat = categories.find(c => c.id === tmpl.categoryId)
     if (!cat) return
-    addTask({ title: tmpl.title, track: cat.id, date, isRecurring: false, xp: tmpl.xp, durationMins: tmpl.durationMins, emoji: cat.emoji })
+    addTask({ title: tmpl.title, track: cat.id, date, isRecurring: false, xp: tmpl.xp, durationMins: tmpl.durationMins, emoji: tmpl.emoji ?? cat.emoji })
     setFlashId(tmpl.id)
     setTimeout(() => setFlashId(null), 1500)
   }
