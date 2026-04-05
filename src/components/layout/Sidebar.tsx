@@ -80,7 +80,7 @@ export function Sidebar() {
       </nav>
 
       {/* Language switcher */}
-      <div className="mt-auto flex items-center justify-center gap-1 lg:w-full lg:justify-start lg:px-3">
+      <div className="mt-auto flex flex-col items-center justify-center gap-0.5 lg:flex-row lg:w-full lg:justify-start lg:px-3 lg:gap-1">
         {(['en', 'uk'] as Lang[]).map((l) => (
           <button
             key={l}
