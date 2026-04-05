@@ -5,7 +5,7 @@ export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
-    const { month, entries, existingProfiles, userName, apiKey } = await req.json()
+    const { month, entries, existingProfiles, userName, apiKey, lang } = await req.json()
 
     if (!apiKey) {
       return NextResponse.json({ error: 'Add your Anthropic API key in the profile' }, { status: 400 })
@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
 
     const client = new Anthropic({ apiKey })
     const name = (userName as string)?.trim() || 'user'
+    const isUk = lang === 'uk'
 
     if (!entries || entries.length === 0) {
       return NextResponse.json({ error: 'No entries for this month' }, { status: 400 })
@@ -29,29 +30,53 @@ export async function POST(req: NextRequest) {
       .map(([m, p]) => `=== ${m} ===\n${(p as { text: string }).text}`)
       .join('\n\n')
 
-    const systemPrompt = `Ты — опытный психолог. Твоя задача — создать точные "заметки психолога" на основе дневниковых записей человека по имени ${name}.
+    const systemPrompt = isUk
+      ? `Ти — досвідчений психолог. Твоє завдання — створити точні "нотатки психолога" на основі щоденникових записів людини на ім'я ${name}.
 
-Эти заметки будут использоваться как контекст для AI-ассистента, который помогает ${name} в повседневной жизни. Чем точнее и полезнее заметки — тем лучше ассистент сможет ему помочь.
+Ці нотатки будуть використовуватись як контекст для AI-асистента, який допомагає ${name} у повсякденному житті. Чим точніші та кориснішими нотатки — тим краще асистент зможе йому допомогти.
 
-ЧТО ВКЛЮЧИТЬ В ЗАМЕТКИ (около 500 слов):
+ЩО ВКЛЮЧИТИ В НОТАТКИ (близько 500 слів):
 
-1. ПАТТЕРНЫ ПОВЕДЕНИЯ — что повторяется? Что он делает когда устаёт, стрессует, откладывает?
-2. ЧТО РЕАЛЬНО РАБОТАЕТ — какие подходы, решения, окружение помогают ему двигаться?
-3. ЗАСТРЯВШИЕ ТОЧКИ — где он буксует снова и снова? Какие страхи, сомнения, избегания?
-4. ЭНЕРГИЯ — что его заряжает? Что истощает?
-5. КЛЮЧЕВЫЕ ТЕМЫ МЕСЯЦА — о чём думал, что переживал, что менялось?
-6. ПРОТИВОРЕЧИЯ — расхождения между тем что говорит и что делает?
-7. ДИНАМИКА — есть ли прогресс, регресс, стагнация?
+1. ПАТЕРНИ ПОВЕДІНКИ — що повторюється? Що він/вона робить коли втомлюється, стресує, відкладає?
+2. ЩО РЕАЛЬНО ПРАЦЮЄ — які підходи, рішення, оточення допомагають рухатись?
+3. ЗАСТРЯГЛІ ТОЧКИ — де він/вона буксує знову і знову? Які страхи, сумніви, уникання?
+4. ЕНЕРГІЯ — що заряджає? Що виснажує?
+5. КЛЮЧОВІ ТЕМИ МІСЯЦЯ — про що думав/ла, що переживав/ла, що змінювалось?
+6. ПРОТИРІЧЧЯ — розбіжності між тим що говорить і що робить?
+7. ДИНАМІКА — є прогрес, регрес, стагнація?
 
 СТИЛЬ:
-- Пиши от третьего лица ("${name} склонен...", "Он замечает...")
-- Конкретно и честно. Без лести, без осуждения.
-- Используй прямые наблюдения из записей, а не абстрактные выводы.
-- Это заметки для специалиста, не для самого ${name} — пиши честно о слабых местах.`
+- Пиши від третьої особи ("${name} схильний...", "Він/вона помічає...")
+- Конкретно і чесно. Без лестощів, без осуду.
+- Використовуй прямі спостереження із записів, а не абстрактні висновки.
+- Це нотатки для спеціаліста, не для самого ${name} — пиши чесно про слабкі місця.`
+      : `You are an experienced psychologist. Your task is to create precise "psychologist's notes" based on the diary entries of a person named ${name}.
+
+These notes will be used as context for an AI assistant that helps ${name} in everyday life. The more accurate and useful the notes — the better the assistant can help.
+
+WHAT TO INCLUDE (around 500 words):
+
+1. BEHAVIORAL PATTERNS — what repeats? What does ${name} do when tired, stressed, procrastinating?
+2. WHAT ACTUALLY WORKS — which approaches, decisions, environments help them move forward?
+3. STUCK POINTS — where do they get stuck repeatedly? What fears, doubts, avoidance patterns?
+4. ENERGY — what charges them? What drains them?
+5. KEY THEMES OF THE MONTH — what were they thinking about, feeling, what changed?
+6. CONTRADICTIONS — gaps between what they say and what they do?
+7. DYNAMICS — is there progress, regression, stagnation?
+
+STYLE:
+- Write in third person ("${name} tends to...", "They notice...")
+- Specific and honest. No flattery, no judgment.
+- Use direct observations from the entries, not abstract conclusions.
+- These are notes for a specialist, not for ${name} themselves — be honest about weak points.`
 
     const userMessage = previousProfilesText
-      ? `ПРЕДЫДУЩИЕ МЕСЯЦЫ (контекст для сравнения динамики):\n${previousProfilesText}\n\n===\n\nЗАПИСИ ЗА ${month}:\n${entriesText}\n\nСоздай заметки психолога за ${month}. Учти динамику относительно предыдущих месяцев если она есть.`
-      : `ЗАПИСИ ЗА ${month}:\n${entriesText}\n\nСоздай заметки психолога за ${month}.`
+      ? isUk
+        ? `ПОПЕРЕДНІ МІСЯЦІ (контекст для порівняння динаміки):\n${previousProfilesText}\n\n===\n\nЗАПИСИ ЗА ${month}:\n${entriesText}\n\nСтвори нотатки психолога за ${month}. Врахуй динаміку відносно попередніх місяців якщо вона є.`
+        : `PREVIOUS MONTHS (context for comparing dynamics):\n${previousProfilesText}\n\n===\n\nENTRIES FOR ${month}:\n${entriesText}\n\nCreate psychologist's notes for ${month}. Consider the dynamics relative to previous months if any.`
+      : isUk
+        ? `ЗАПИСИ ЗА ${month}:\n${entriesText}\n\nСтвори нотатки психолога за ${month}.`
+        : `ENTRIES FOR ${month}:\n${entriesText}\n\nCreate psychologist's notes for ${month}.`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',

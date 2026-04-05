@@ -8,7 +8,7 @@ import { uk as ukLocale } from 'date-fns/locale'
 import { Monitor, Check, Sun, Home, Pencil, Trash2, Copy, Layers, X, ArrowLeft, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
-import { calcXP, catColor, catLabel, catEmoji, type Category } from '@/lib/types'
+import { calcXP, catColor, catLabel, catEmoji, translateCatLabel, type Category } from '@/lib/types'
 import { Portal } from '@/components/Portal'
 import { useT } from '@/lib/i18n'
 
@@ -926,6 +926,7 @@ function ScheduleTaskCard({
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [localTitle, setLocalTitle] = useState(task.title)
+  const { lang } = useT()
   const color = catColor(task.track, categories)
   const displayTime = time
   const dur = task.durationMins ?? DEFAULT_DURATION
@@ -970,7 +971,7 @@ function ScheduleTaskCard({
             className="rounded-lg px-2 py-0.5 text-xs font-semibold"
             style={{ background: `${color}20`, color }}
           >
-            {catLabel(task.track, categories)}
+            {translateCatLabel(catLabel(task.track, categories), lang)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">

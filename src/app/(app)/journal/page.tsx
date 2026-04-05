@@ -70,7 +70,7 @@ export default function JournalPage() {
       const res = await fetch('/api/journal-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month: currentMonth, entries: monthEntries, existingProfiles: journalProfiles, userName, apiKey }),
+        body: JSON.stringify({ month: currentMonth, entries: monthEntries, existingProfiles: journalProfiles, userName, apiKey, lang }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error')

@@ -7,7 +7,7 @@ import { uk as ukLocale } from 'date-fns/locale'
 import { Flame, Zap, CheckCircle2, Circle, ChevronRight, CalendarDays, Layers, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
-import { catColor, catLabel, catEmoji } from '@/lib/types'
+import { catColor, catLabel, catEmoji, translateCatLabel } from '@/lib/types'
 import { ALL_ACHIEVEMENTS, TIER_COLORS } from '@/lib/achievements'
 import { useT } from '@/lib/i18n'
 
@@ -127,7 +127,7 @@ export default function Dashboard() {
   const trackEntries = allTrackIds
     .map(tr => [tr, trackXP[tr] || 0] as [string, number])
     .filter(([tr]) => {
-      const label = catLabel(tr, categories)
+      const label = translateCatLabel(catLabel(tr, categories), lang)
       if (seenLabels.has(label)) return false
       seenLabels.add(label)
       return true
@@ -408,7 +408,7 @@ export default function Dashboard() {
                 <div key={track} className="flex items-center gap-2.5">
                   <span className="w-5 text-center text-sm shrink-0">{catEmoji(track, categories)}</span>
                   <span className="w-24 shrink-0 truncate text-sm text-foreground/80">
-                    {catLabel(track, categories)}
+                    {translateCatLabel(catLabel(track, categories), lang)}
                   </span>
                   <div
                     className="flex-1 h-1.5 rounded-full overflow-hidden"

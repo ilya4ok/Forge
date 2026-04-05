@@ -119,6 +119,24 @@ export const TRACK_LABELS: Record<string, string> = {
   gym: 'Gym',
 }
 
+// ── Preset label translations (labels are stored in Russian in state) ──
+const PRESET_LABEL_TRANSLATIONS: Record<string, { en: string; uk: string }> = {
+  'Спорт':      { en: 'Sport',    uk: 'Спорт' },
+  'Учёба':      { en: 'Study',    uk: 'Навчання' },
+  'Работа':     { en: 'Work',     uk: 'Робота' },
+  'Отдых':      { en: 'Rest',     uk: 'Відпочинок' },
+  'Творчество': { en: 'Creative', uk: 'Творчість' },
+  'Финансы':    { en: 'Finance',  uk: 'Фінанси' },
+  'Здоровье':   { en: 'Health',   uk: 'Здоров\'я' },
+  'Другое':     { en: 'Other',    uk: 'Інше' },
+}
+
+export function translateCatLabel(label: string, lang: string): string {
+  const tr = PRESET_LABEL_TRANSLATIONS[label]
+  if (!tr) return label
+  return lang === 'uk' ? tr.uk : tr.en
+}
+
 // ── Dynamic helpers — check user categories first, fall back to legacy ──
 export function catColor(track: string, categories: Category[]): string {
   return categories.find(c => c.id === track)?.color ?? TRACK_COLORS[track] ?? '#818cf8'

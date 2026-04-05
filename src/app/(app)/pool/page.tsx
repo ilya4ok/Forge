@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import { Plus, Pencil, Trash2, Check, CalendarPlus, ChevronDown, ArrowLeft, X } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import type { TemplateTask } from '@/lib/types'
+import { translateCatLabel } from '@/lib/types'
 import { Portal } from '@/components/Portal'
 import { useT } from '@/lib/i18n'
 
@@ -134,7 +135,7 @@ function TaskCardForm({
   onSave: (data: { title: string; emoji: string; durationMins: number; xp: number; weeklyFrequency: number; defaultTimeStart: string; preset: Preset }) => void
   onCancel: () => void
 }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const startPreset = PRESETS.find(p => p.key === (initial?.presetKey ?? initialPresetKey)) ?? null
   const [step, setStep] = useState<1 | 2>(startPreset ? 2 : 1)
   const [preset, setPreset] = useState<Preset | null>(startPreset)
@@ -206,7 +207,7 @@ function TaskCardForm({
           style={{ background: `${preset!.color}15`, border: `1px solid ${preset!.color}30` }}
         >
           <span className="text-base">{preset!.emoji}</span>
-          <span className="text-sm font-medium" style={{ color: preset!.color }}>{preset!.label}</span>
+          <span className="text-sm font-medium" style={{ color: preset!.color }}>{translateCatLabel(preset!.label, lang)}</span>
         </div>
       </div>
 
@@ -355,7 +356,7 @@ function TaskCardForm({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function PoolPage() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const {
     categories, addCategory,
     templateTasks, addTemplateTask, updateTemplateTask, deleteTemplateTask,
@@ -543,7 +544,7 @@ export default function PoolPage() {
                       className="rounded-lg px-2 py-0.5 text-xs font-semibold"
                       style={{ background: `${color}20`, color }}
                     >
-                      {cat.label}
+                      {translateCatLabel(cat.label, lang)}
                     </span>
                   )}
                 </div>

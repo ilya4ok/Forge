@@ -7,7 +7,7 @@ import { uk as ukLocale } from 'date-fns/locale'
 import { Flame, Zap, CheckCircle2, Trophy, TrendingUp, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
-import { catColor, catLabel, catEmoji } from '@/lib/types'
+import { catColor, catLabel, catEmoji, translateCatLabel } from '@/lib/types'
 import { useT } from '@/lib/i18n'
 
 const XP_PER_LEVEL = 200
@@ -35,7 +35,7 @@ export default function StatsPage() {
   const trackEntries = allTrackIds
     .map(tk => [tk, trackXP[tk] || 0] as [string, number])
     .filter(([tk]) => {
-      const label = catLabel(tk, categories)
+      const label = translateCatLabel(catLabel(tk, categories), lang)
       if (seenLabels.has(label)) return false
       seenLabels.add(label)
       return true
@@ -187,7 +187,7 @@ export default function StatsPage() {
             {trackEntries.map(([track, xp], i) => {
               const color = catColor(track, categories)
               const emoji = catEmoji(track, categories)
-              const label = catLabel(track, categories)
+              const label = translateCatLabel(catLabel(track, categories), lang)
               const count = tasksByTrack[track] || 0
               const pct = Math.round((xp / maxXP) * 100)
               return (
