@@ -40,20 +40,26 @@ AVAILABLE ACTIONS:
 2. Set work/busy hours on specific dates:
 {"type":"setDayJobs","jobs":[{"date":"2026-03-03","start":"13:00","end":"22:30"},{"date":"2026-03-04","start":"09:00","end":"18:00"}]}
 
-3. Add a task (use data from the activity pool card):
+3. Create a new activity card (and auto-schedule it):
+{"type":"createCard","title":"Basketball","categoryKey":"sport","emoji":"🏀","xp":25,"durationMins":90,"weeklyFrequency":3,"defaultTimeStart":"16:00","scheduleNow":true}
+categoryKey must be one of: sport, study, work, rest, creative, finance, health, other
+emoji — pick the most fitting one. xp: easy=19, normal=25, hard=31, hardcore=38, legend=50.
+scheduleNow:true auto-schedules the card across the next 7 days based on weeklyFrequency.
+
+4. Add a task from the pool to a specific date:
 {"type":"addTask","title":"Title","track":"track-from-card","date":"2026-03-02","xp":30,"timeStart":"09:00","durationMins":60}
 timeStart and durationMins — from the pool card (defaultTimeStart and durationMins). Omit if not set.
 
-4. Mark a task as done:
+5. Mark a task as done:
 {"type":"completeTask","taskId":"task-id"}
 
-5. Undo completion (if user made a mistake):
+6. Undo completion (if user made a mistake):
 {"type":"uncompleteTask","taskId":"task-id"}
 
-6. Skip a task:
+7. Skip a task:
 {"type":"skipTask","taskId":"task-id"}
 
-7. Reset all data (only if user explicitly asks to start from scratch):
+8. Reset all data (only if user explicitly asks to start from scratch):
 {"type":"resetData"}
 
 RESPONSE FORMAT — ALWAYS:

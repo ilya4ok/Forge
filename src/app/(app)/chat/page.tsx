@@ -10,6 +10,7 @@ import { useStore } from '@/lib/store'
 import { ApiKeySetup } from '@/components/ApiKeySetup'
 import type { Track, DayJob } from '@/lib/types'
 import { useT } from '@/lib/i18n'
+import { getPreset } from '@/lib/presets'
 
 function parseInline(text: string): React.ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/)
@@ -52,11 +53,12 @@ type Message = { role: 'user' | 'assistant'; content: string }
 type Action =
   | { type: 'updateSchedule'; month: string; workDays: string[] }
   | { type: 'setDayJobs'; jobs: DayJob[] }
-  | { type: 'addTask'; title: string; track: Track; date: string; xp: number }
+  | { type: 'addTask'; title: string; track: Track; date: string; xp: number; durationMins?: number; timeStart?: string; emoji?: string }
   | { type: 'completeTask'; taskId: string }
   | { type: 'uncompleteTask'; taskId: string }
   | { type: 'skipTask'; taskId: string }
   | { type: 'resetData' }
+  | { type: 'createCard'; title: string; categoryKey: string; emoji?: string; xp: number; durationMins: number; weeklyFrequency: number; defaultTimeStart?: string; scheduleNow?: boolean }
 
 
 export default function ChatPage() {
@@ -70,7 +72,7 @@ export default function ChatPage() {
 
   const { chatHistory, addChatMessage, tasks, streak, trackXP, workDays, dayJobs,
     journalEntries, journalProfiles, userName, apiKey, setApiKey,
-    templateTasks, categories,
+    templateTasks, categories, addCategory, addTemplateTask,
     updateSchedule, setDayJobs, addTask, completeTask, uncompleteTask, skipTask, setOnboardingDone } = useStore()
 
   useEffect(() => {
@@ -109,6 +111,26 @@ export default function ChatPage() {
         skipTask(action.taskId)
         const task = tasks.find(tk => tk.id === action.taskId)
         done.push(t.chat.actions.taskSkipped(task?.title ?? action.taskId))
+      } else if (action.type === 'createCard') {
+        const preset = getPreset(action.categoryKey)
+        let cat = useStore.getState().categories.find(c => c.label === preset.label && c.color === preset.color)
+        if (!cat) {
+          addCategory({ label: preset.label, color: preset.color, emoji: preset.emoji, mottos: [...preset.mottos] })
+          cat = useStore.getState().categories.find(c => c.label === preset.label && c.color === preset.color)!
+        }
+        const emoji = action.emoji ?? preset.emoji
+        addTemplateTask({ title: action.title, emoji, categoryId: cat.id, durationMins: action.durationMins, xp: action.xp, weeklyFrequency: action.weeklyFrequency, defaultTimeStart: action.defaultTimeStart })
+        if (action.scheduleNow !== false) {
+          const freq = Math.min(action.weeklyFrequency, 7)
+          const today = new Date()
+          for (let i = 0; i < freq; i++) {
+            const dayOffset = Math.round(i * 7 / freq)
+            const d = new Date(today)
+            d.setDate(today.getDate() + dayOffset)
+            addTask({ title: action.title, track: cat.id, date: format(d, 'yyyy-MM-dd'), isRecurring: false, xp: action.xp, durationMins: action.durationMins, emoji, timeStart: action.defaultTimeStart })
+          }
+        }
+        done.push(`✅ Created card "${action.title}" (${action.weeklyFrequency}×/wk)`)
       } else if (action.type === 'resetData') {
         done.push(t.chat.actions.dataReset)
         setTimeout(() => {
